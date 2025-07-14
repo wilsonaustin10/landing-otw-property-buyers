@@ -1,0 +1,93 @@
+{
+  "metaTitle": "Example Meta Title: We Buy Houses Fast!",
+  "businessName": "Your Company Name Here",
+  "metaDescription": "Get a fair cash offer for your house today. We buy houses in any condition, providing a quick and easy selling process.",
+  "ogImageUrl": "https://example.com/assets/og-image.jpg",
+  "pageUrl": "https://your-landing-page-url.com",
+  "faviconUrl": "/assets/favicon.ico",
+  "primaryColor": "#5b5a99",
+  "accentColor": "#65bee4",
+  "heroBackgroundColor": "#e9ecef",
+  "heroHeadlineColor": "#5b5a99",
+  "heroSubheadlineColor": "#343a40",
+
+  "googleAnalyticsId": "UA-XXXXX-Y",
+  "facebookPixelId": "YOUR_FACEBOOK_PIXEL_ID",
+  "hotjarSiteId": "YOUR_HOTJAR_SITE_ID",
+  "recaptchaSiteKey": "YOUR_RECAPTCHA_V3_SITE_KEY",
+
+  "logoUrl": "/assets/logo.png",
+  "navLinks": [
+    { "text": "How It Works", "url": "#how-it-works" },
+    { "text": "About Us", "url": "#about" },
+    { "text": "Get Your Offer", "url": "#form" }
+  ],
+
+  "heroHeadline": "Sell Your House Fast & Get a Fair Cash Offer Today!",
+  "heroSubheadline": "No repairs, no commissions, no hassles. Find out how much we can offer for your property in its current condition.",
+  "heroCtaLink": "#form",
+  "heroCtaText": "Get My Cash Offer Now",
+
+  "formHeading": "Tell Us About Your Property",
+  "formSubheading": "Submit your details below for a no-obligation cash offer within 24 hours.",
+
+  "featureSections": [
+    {
+      "title": "Fast Closings",
+      "content": "<p>We can close on your timeline, often in as little as 7 days. Say goodbye to lengthy waiting periods.</p>"
+    },
+    {
+      "title": "No Repairs Needed",
+      "content": "<p>Sell your house as-is. You don't need to worry about costly repairs or renovations.</p>"
+    },
+    {
+      "title": "Zero Commissions or Fees",
+      "content": "<p>What we offer is what you get. No hidden fees or agent commissions to pay.</p>"
+    }
+  ],
+
+  "testimonialsSection": {
+    "show": true,
+    "title": "Hear From Our Satisfied Clients",
+    "testimonials": [
+      {
+        "text": "The process was so smooth and quick! I got a fair offer and closed within two weeks. Highly recommend!",
+        "author": "Sarah P., Anytown, USA"
+      },
+      {
+        "text": "I needed to sell my inherited property fast without fixing it up. They made it incredibly easy and stress-free.",
+        "author": "Michael B., Otherville, USA"
+      }
+    ]
+  },
+
+  "faqSection": {
+    "show": true,
+    "title": "Frequently Asked Questions",
+    "faqs": [
+      {
+        "question": "How quickly can I get an offer?",
+        "answer": "<p>You can typically expect a fair, no-obligation cash offer from us within 24 hours of submitting your property details.</p>"
+      },
+      {
+        "question": "Do I need to clean or repair my house before selling?",
+        "answer": "<p>No, not at all! We buy houses in any condition, 'as-is'. You don't have to worry about cleaning, repairs, or staging.</p>"
+      },
+      {
+        "question": "Are there any hidden fees or commissions?",
+        "answer": "<p>Absolutely not. The cash offer we provide is the amount you'll receive. We cover all closing costs, and there are no agent commissions.</p>"
+      }
+    ]
+  },
+
+  "currentYear": "2024",
+  "contactEmail": "info@yourcompany.com",
+  "phoneNumber": "+1 (555) 123-4567",
+  "footerText": "<p>Your Company Name | 123 Main Street, Anytown, USA | <a href='/privacy-policy' style='color: var(--accent-color);'>Privacy Policy</a></p>",
+  "socialLinks": [
+    { "platform": "Facebook", "url": "https://facebook.com/yourcompany" },
+    { "platform": "LinkedIn", "url": "https://linkedin.com/company/yourcompany" }
+  ],
+
+  "zapierWebhookUrl": "YOUR_ZAPIER_WEBHOOK_URL_HERE"
+} 
