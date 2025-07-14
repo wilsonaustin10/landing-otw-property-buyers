@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Google Places Autocomplete styles */
+.pac-container {
+  z-index: 9999 !important;
+  position: absolute !important;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 0 0 8px 8px;
+  border-top: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-top: -1px;
+  font-family: inherit;
+}
+
+.pac-item {
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  border-top: 1px solid #e5e7eb;
+}
+
+.pac-item:first-child {
+  border-top: none;
+}
+
+.pac-item:hover {
+  background-color: #f3f4f6;
+}
+
+.pac-item-selected {
+  background-color: #f3f4f6;
+}
+
+.pac-matched {
+  font-weight: 600;
+}
+
+.pac-icon {
+  margin-right: 8px;
+}
+
+/* Hide the Google Places API attribution */
+.pac-logo:after {
+  display: none !important;
+} 
+
+/* Add these to your CSS file */
+.text-outline-white {
+  text-shadow: 1px 1px 0 white, -1px -1px 0 white,
+               1px -1px 0 white, -1px 1px 0 white; /* White outline */
+}
+
+.text-outline-black {
+  text-shadow: 1px 1px 0 black, -1px -1px 0 black,
+               1px -1px 0 black, -1px 1px 0 black; /* Black outline */
+}
+
