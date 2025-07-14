@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-xl font-semibold mb-3 text-gray-800">1. Introduction</h2>
               <p>
-                OTW Property Buyers> ("we," "our," or "us") respects your privacy and is committed to protecting 
+                OTW Property Buyers ("we," "our," or "us") respects your privacy and is committed to protecting 
                 it through our compliance with this policy. This policy describes the types of information we 
                 may collect from you or that you may provide when you visit our website and our practices for 
                 collecting, using, maintaining, protecting, and disclosing that information.
