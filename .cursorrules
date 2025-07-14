@@ -1,0 +1,206 @@
+# .cursorrules
+
+# General
+1. Use Cursor AI to write code.
+2. Use Cursor AI to write documentation.
+3. Every time you write code, write a prompt for Cursor AI to help it understand your intentions.
+4. Provide reasoning and defense supported by reference documentation for every change you make.
+5. Provide thorough explanations of your code changes or new components.
+
+
+# Core Rules
+1. The landing page must be optimized for speed and responsiveness.
+2. All forms must auto-save user inputs (address and phone number) even if the user does not complete the form.
+3. Use Google Places API for address autofill functionality.
+4. Integrate Zapier and Webhook API to send form data to Go High Level CRM.
+5. Ensure the landing page is built with SEO-optimized content, including meta tags and keywords.
+6. Use a mobile-first design approach.
+
+# Folder Structure
+- Follow the predefined folder structure:
+  - All React components must be placed in the `src/components/` directory.
+  - Pages must be placed in the `src/pages/` directory.
+  - Static assets like images and styles go into `src/assets/`.
+  - Utility scripts for APIs and analytics belong in `src/utils/`.
+  - Backend integrations (webhooks, API handlers) go into `src/backend/`.
+
+# Styling
+1. Use TailwindCSS for consistent styling across components.
+2. Adhere to the following color palette:
+   - Primary: #5b5a99
+   - Accent: #65bee4
+   - Background: White
+   - Text: Dark grey (#333)
+3. All buttons must be styled with the primary color unless otherwise specified.
+
+# Form Components
+1. The form must consist of multiple steps:
+   - Step 1: Address (with autofill) and Phone Number.
+   - Step 2: Additional property details (e.g., condition, reason for selling).
+2. The "Next" button on each step must submit and save user data.
+3. Display a loading indicator for API calls, especially for address autofill.
+4. Include validation for required fields (address and phone number).
+
+# Analytics and Tracking
+1. Integrate Google Analytics to track:
+   - Page visits
+   - Clicks
+   - Form completions
+2. Add a Facebook Pixel for PPC campaign tracking.
+3. Implement Hotjar for heatmaps and user behavior tracking.
+
+# Performance
+1. Ensure Lighthouse scores for performance, accessibility, best practices, and SEO are above 90.
+2. Optimize images and assets for web performance.
+3. Use lazy-loading for images and asynchronous loading for third-party scripts.
+
+# Deployment
+1. The project must be deployable via Vercel with CI/CD enabled.
+2. Ensure that the deployed landing page URL is accessible and works on mobile, tablet, and desktop devices.
+
+# Developer Prompts
+1. When working on a new feature:
+   - "How will this feature improve the user experience or lead capture rate?"
+2. When optimizing:
+   - "Does this change improve performance or simplicity?"
+3. When debugging:
+   - "What are the possible points of failure? Are there fallback mechanisms in place?"
+4. When writing SEO content:
+   - "Does this content include relevant keywords? Is it concise and user-focused?"
+
+# Error Handling
+1. All API calls must include proper error handling with clear error messages displayed to the user.
+2. Log errors in the backend for debugging.
+3. Redirect users to a "Thank You" page or error page if there is an issue during submission.
+
+# Automation
+1. Use Zapier for automation, including:
+   - Sending form data to CRM.
+   - Triggering email notifications on new leads.
+2. Implement webhooks to ensure real-time lead submission.
+
+# React Components
+1. All components must be reusable and modular.
+2. Use props for dynamic content where applicable.
+3. Separate UI logic from business logic within components.
+
+# SEO Rules
+1. Include meta tags:
+   - Title: "Sell Your House Fast | Get a Cash Offer Today"
+   - Description: "We buy houses in any condition. Submit your address for a fast, no-obligation cash offer."
+2. Use H1 tags for main headlines and H2 for secondary content.
+3. Include alt attributes for all images.
+
+# Testing
+1. Run unit tests on React components for functionality.
+2. Perform integration testing for form submission and CRM integration.
+3. Test on multiple browsers and devices to ensure compatibility.
+
+# Prompts for Cursor Assistance
+- "Generate a form component with Google Places API integration."
+- "Create a reusable button component styled with TailwindCSS."
+- "Set up a webhook to send form data to Go High Level CRM via Zapier."
+- "Implement analytics tracking for user interactions using Google Tag Manager."
+- "Optimize the landing page for a Lighthouse performance score above 90."
+- "Build a responsive header component with the brand logo and navigation links."
+- "Add validation rules for required form fields."
+- "Create a Thank You page that acknowledges successful form submissions."
+- "Ensure form data is saved at every step, even if the user doesn't complete the process."
+
+# Notes
+1. Keep code modular and maintainable.
+2. Regularly commit progress to GitHub with clear commit messages.
+3. Prioritize simplicity and user experience in all components.
+
+# Google Sheets Integration
+1. Use googleapis library for direct sheet interaction
+2. Follow JWT authentication pattern
+3. Maintain consistent column structure:
+   - timestamp (A) - ISO string format
+   - leadId (B) - Unique identifier with timestamp
+   - address (C) - Full property address
+   - streetAddress (D) - Street component
+   - city (E) - City component
+   - state (F) - State component
+   - postalCode (G) - Postal code
+   - phone (H) - Contact phone
+   - placeId (I) - Google Places ID
+   - firstName (J) - First name
+   - lastName (K) - Last name
+   - email (L) - Email address
+   - isPropertyListed (M) - Yes/No format
+   - propertyCondition (N) - Property condition
+   - timeframe (O) - Selling timeframe
+   - price (P) - Asking price
+   - lastUpdated (Q) - ISO string format
+
+# Lead Capture Rules
+1. Capture leads immediately after "Get Cash Offer" click
+2. Generate unique leadId using timestamp and random string
+3. Record submission timestamp and lastUpdated for every entry
+4. Handle missing fields gracefully with empty strings
+5. Convert boolean values to Yes/No format
+
+# Sheet Operations
+1. Use A1 notation for all range references
+2. Quote sheet names that contain spaces
+3. Use USER_ENTERED for value input option
+4. Use INSERT_ROWS for data insertion
+5. Validate response status (200 for success)
+
+# Error Handling
+1. Validate all required environment variables
+2. Check for missing credentials
+3. Provide detailed error messages
+4. Log errors for debugging
+5. Return standardized error responses
+
+# Security
+1. Use JWT authentication with service account
+2. Store credentials in environment variables
+3. Validate all input data
+4. Implement rate limiting
+5. Use HTTPS for all API calls
+
+# Data Formatting
+1. Use ISO strings for all dates
+2. Clean and standardize inputs
+3. Handle missing fields with empty strings
+4. Convert booleans to Yes/No
+5. Maintain consistent data types
+
+# Performance
+1. Single API call per submission
+2. Efficient error handling
+3. Proper credential caching
+4. Minimal data transformation
+
+# Lead Capture Flow
+1. Initial Lead Capture (First Step):
+   - Triggered by "Get Cash Offer" button click
+   - Submits to /api/submit-partial endpoint
+   - Generates unique leadId
+   - Creates new row in Google Sheets
+   - Stores leadId in form state
+   - Required fields: address, phone, consent
+
+2. Complete Lead Submission (Contact Page):
+   - Uses stored leadId from initial capture
+   - Submits to /api/submit-form endpoint
+   - Updates existing row in Google Sheets
+   - Required fields: firstName, lastName, email, propertyCondition, timeframe, price
+   - No duplicate rows created
+
+3. Google Sheets Integration:
+   - Uses A1 notation for ranges
+   - Maintains consistent column structure
+   - Updates existing rows based on leadId
+   - Records timestamps for all changes
+   - Handles partial and complete submissions
+
+4. Data Flow:
+   - PropertyForm.tsx -> submit-partial -> googleSheets.ts (new row)
+   - Contact/page.tsx -> submit-form -> googleSheets.ts (update row)
+   - Consistent leadId tracking throughout process
+   - Error handling at each step
+   - Validation of required fields
