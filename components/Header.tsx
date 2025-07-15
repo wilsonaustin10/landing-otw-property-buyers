@@ -7,8 +7,8 @@ export default function Header() {
   return (
     <header className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-2">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center">
+        <div className="flex flex-col md:flex-row items-center md:justify-between">
+          <Link href="/" className="flex items-center mx-auto md:mx-0">
             <div className="relative w-[200px] sm:w-[300px] md:w-[400px] lg:w-[500px] h-[53px] sm:h-[80px] md:h-[106px] lg:h-[133px]">
               <Image
                 src="/OTW TP.png"
@@ -40,7 +40,7 @@ export default function Header() {
               Testimonials
             </Link>
           </nav>
-          <div className="flex items-center">
+          <div className="flex items-center mt-4 md:mt-0">
             <Link
               href="/#property-form"
               className="inline-flex items-center px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 border border-transparent text-sm sm:text-base md:text-lg font-semibold rounded-md shadow-sm text-white bg-secondary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors"
