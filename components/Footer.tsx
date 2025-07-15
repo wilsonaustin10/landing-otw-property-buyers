@@ -12,7 +12,7 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center">
               <Image
-                src="/OTW Transparent.png"
+                src="/OTW TP.png"
                 alt="OTW Property Buyers"
                 width={120}
                 height={120}
