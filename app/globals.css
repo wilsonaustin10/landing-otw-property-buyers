@@ -59,3 +59,23 @@
                1px -1px 0 black, -1px 1px 0 black; /* Black outline */
 }
 
+/* Mobile-optimized header styles */
+@media (max-width: 640px) {
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  /* Enhance logo prominence on mobile */
+  header img {
+    max-width: 85vw;
+    height: auto;
+  }
+  
+  /* Ensure button stays prominent but doesn't overshadow logo */
+  header a[href="/#property-form"] {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}
+

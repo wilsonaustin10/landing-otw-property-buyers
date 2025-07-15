@@ -7,6 +7,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       colors: {
         primary: '#7dd3c0', // Seafoam
         secondary: '#ff6b6b', // Coral

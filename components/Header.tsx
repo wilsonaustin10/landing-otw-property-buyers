@@ -6,10 +6,10 @@ import Link from 'next/link';
 export default function Header() {
   return (
     <header className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-2">
-        <div className="flex flex-col md:flex-row items-center md:justify-between">
-          <Link href="/" className="flex items-center mx-auto md:mx-0">
-            <div className="relative w-[200px] sm:w-[300px] md:w-[400px] lg:w-[500px] h-[53px] sm:h-[80px] md:h-[106px] lg:h-[133px]">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-3 md:py-2">
+        <div className="flex flex-col md:flex-row items-center md:justify-between space-y-3 md:space-y-0">
+          <Link href="/" className="flex items-center w-full md:w-auto justify-center md:justify-start">
+            <div className="relative w-[280px] xs:w-[320px] sm:w-[300px] md:w-[400px] lg:w-[500px] h-[75px] xs:h-[85px] sm:h-[80px] md:h-[106px] lg:h-[133px]">
               <Image
                 src="/OTW TP.png"
                 alt="OTW Property Buyers"
@@ -40,13 +40,13 @@ export default function Header() {
               Testimonials
             </Link>
           </nav>
-          <div className="flex items-center mt-4 md:mt-0">
+          <div className="flex items-center w-full md:w-auto justify-center md:justify-end">
             <Link
               href="/#property-form"
-              className="inline-flex items-center px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 border border-transparent text-sm sm:text-base md:text-lg font-semibold rounded-md shadow-sm text-white bg-secondary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors"
+              className="inline-flex items-center px-6 xs:px-8 sm:px-4 md:px-6 py-2.5 xs:py-3 sm:py-2.5 md:py-3 border border-transparent text-base xs:text-lg sm:text-base md:text-lg font-semibold rounded-md shadow-sm text-white bg-secondary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors transform hover:scale-105 md:hover:scale-100"
             >
-              <span className="hidden sm:inline">Get Your Offer</span>
-              <span className="sm:hidden">Get Offer</span>
+              <span className="hidden xs:inline sm:inline">Get Your Offer</span>
+              <span className="xs:hidden">Get Offer</span>
             </Link>
           </div>
         </div>
