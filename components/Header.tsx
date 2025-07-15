@@ -11,7 +11,7 @@ export default function Header() {
           <Link href="/" className="flex items-center">
             <div className="relative w-[320px] h-[85px]">
               <Image
-                src="https://firebasestorage.googleapis.com/v0/b/allied-advantage-automation.firebasestorage.app/o/logos%2F1752521179800-ocpcz0%2FOTW%20Homebuyers.png?alt=media&token=b37b1df4-c86b-4397-a149-fe943949e654"
+                src="/OTW Transparent.png"
                 alt="OTW Property Buyers"
                 fill
                 style={{ objectFit: 'contain' }}

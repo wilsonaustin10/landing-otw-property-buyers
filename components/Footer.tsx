@@ -12,7 +12,7 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center">
               <Image
-                src="https://firebasestorage.googleapis.com/v0/b/allied-advantage-automation.firebasestorage.app/o/logos%2F1752521179800-ocpcz0%2FOTW%20Homebuyers.png?alt=media&token=b37b1df4-c86b-4397-a149-fe943949e654"
+                src="/OTW Transparent.png"
                 alt="OTW Property Buyers"
                 width={120}
                 height={120}
