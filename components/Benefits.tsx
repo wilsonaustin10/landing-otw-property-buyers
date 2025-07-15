@@ -23,7 +23,7 @@ export function Benefits({ className }: BenefitsProps) {
             <div className="relative">
               <CheckCircle className="h-8 w-8 text-accent stroke-[2.5] drop-shadow-[0_0_3px_rgba(255,255,255,0.8)]" />
             </div>
-            <span className="text-primary text-2xl font-bold">{benefit}</span>
+            <span className="text-white text-2xl font-bold">{benefit}</span>
           </div>
         ))}
       </div>

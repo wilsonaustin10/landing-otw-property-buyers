@@ -6,10 +6,10 @@ import Link from 'next/link';
 export default function Header() {
   return (
     <header className="bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <div className="relative w-[320px] h-[85px]">
+            <div className="relative w-[400px] h-[106px]">
               <Image
                 src="/OTW TP.png"
                 alt="OTW Property Buyers"
@@ -23,19 +23,19 @@ export default function Header() {
           <nav className="hidden md:flex space-x-8">
             <Link 
               href="/" 
-              className="text-primary hover:text-accent font-medium transition-colors"
+              className="text-primary hover:text-accent font-medium text-lg transition-colors"
             >
               Home
             </Link>
             <Link 
               href="#how-it-works" 
-              className="text-primary hover:text-accent font-medium transition-colors"
+              className="text-primary hover:text-accent font-medium text-lg transition-colors"
             >
               How It Works
             </Link>
             <Link 
               href="#testimonials" 
-              className="text-primary hover:text-accent font-medium transition-colors"
+              className="text-primary hover:text-accent font-medium text-lg transition-colors"
             >
               Testimonials
             </Link>
