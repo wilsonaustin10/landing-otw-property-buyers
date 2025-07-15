@@ -21,7 +21,7 @@ export function Benefits({ className }: BenefitsProps) {
         {benefits.map((benefit, index) => (
           <div key={index} className="flex flex-col items-center justify-center space-y-2 text-xl font-bold">
             <div className="relative">
-              <CheckCircle className="h-8 w-8 text-accent stroke-[3] drop-shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+              <CheckCircle className="h-8 w-8 text-secondary stroke-[3] drop-shadow-[0_0_6px_rgba(255,107,107,0.6)]" />
             </div>
             <span className="text-white text-2xl font-bold">{benefit}</span>
           </div>
