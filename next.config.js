@@ -9,7 +9,7 @@ const nextConfig = {
   poweredByHeader: false,
   // Configure image domains if needed
   images: {
-    domains: ['localhost', 'offer.goservebig.com'],
+    domains: ['localhost', 'offer.goservebig.com', 'firebasestorage.googleapis.com'],
   },
   // Add domain for Maps API
   async headers() {
