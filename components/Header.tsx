@@ -9,7 +9,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-2">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <div className="relative w-[500px] h-[133px]">
+            <div className="relative w-[200px] sm:w-[300px] md:w-[400px] lg:w-[500px] h-[53px] sm:h-[80px] md:h-[106px] lg:h-[133px]">
               <Image
                 src="/OTW TP.png"
                 alt="OTW Property Buyers"
@@ -43,9 +43,10 @@ export default function Header() {
           <div className="flex items-center">
             <Link
               href="/#property-form"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-lg font-semibold rounded-md shadow-sm text-white bg-secondary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors"
+              className="inline-flex items-center px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 border border-transparent text-sm sm:text-base md:text-lg font-semibold rounded-md shadow-sm text-white bg-secondary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors"
             >
-              Get Your Offer
+              <span className="hidden sm:inline">Get Your Offer</span>
+              <span className="sm:hidden">Get Offer</span>
             </Link>
           </div>
         </div>

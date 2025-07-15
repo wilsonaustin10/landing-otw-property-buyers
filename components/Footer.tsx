@@ -6,17 +6,17 @@ import Image from 'next/image';
 export default function Footer() {
   return (
     <footer className="bg-footer-bg text-footer-text">
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-4 gap-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10 md:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center">
               <Image
                 src="/OTW TP.png"
                 alt="OTW Property Buyers"
-                width={120}
-                height={120}
-                className="mr-2"
+                width={100}
+                height={100}
+                className="mr-2 w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[120px] md:h-[120px]"
               />
             </div>
             <p className="text-footer-text/90">
