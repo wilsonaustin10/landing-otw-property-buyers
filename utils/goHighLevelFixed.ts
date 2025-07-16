@@ -30,32 +30,41 @@ export class GoHighLevelService {
   private endpoint: string;
   private enabled: boolean;
   private locationId: string;
+  private authType: 'jwt' | 'apikey';
 
   constructor() {
     this.apiKey = process.env.GHL_API_KEY || '';
     this.endpoint = process.env.NEXT_PUBLIC_GHL_ENDPOINT || '';
     this.enabled = Boolean(this.apiKey && this.endpoint);
     
+    // Determine auth type based on token format
+    this.authType = this.apiKey.startsWith('eyJ') ? 'jwt' : 'apikey';
+    
     // Extract location ID from JWT token if available
     this.locationId = '';
-    if (this.apiKey) {
+    if (this.apiKey && this.authType === 'jwt') {
       try {
         const tokenParts = this.apiKey.split('.');
         if (tokenParts.length === 3) {
           const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
           this.locationId = payload.location_id || '';
-          console.log('Extracted location ID:', this.locationId);
-          
-          // Check if token has millisecond timestamps (common GHL issue)
-          if (payload.iat && payload.iat > 1000000000000) {
-            console.warn('WARNING: JWT token has millisecond timestamps. This is a known GHL issue.');
-            console.warn('Token iat:', new Date(payload.iat).toISOString());
-          }
+          console.log('Extracted location ID from JWT:', this.locationId);
         }
       } catch (error) {
         console.error('Failed to extract location ID from token:', error);
       }
+    } else if (this.authType === 'apikey') {
+      // For API key auth, location ID might need to be provided separately
+      this.locationId = process.env.GHL_LOCATION_ID || '';
+      console.log('Using location ID from env:', this.locationId);
     }
+    
+    console.log('GHL Service initialized:', {
+      authType: this.authType,
+      hasApiKey: !!this.apiKey,
+      endpoint: this.endpoint,
+      locationId: this.locationId
+    });
   }
 
   isEnabled(): boolean {
@@ -68,41 +77,36 @@ export class GoHighLevelService {
     }
 
     try {
-      // Format body according to GHL v1 API requirements
-      const requestBody: any = {
+      const requestBody = {
+        ...data,
+        locationId: this.locationId,
         source: data.source || 'Website Form',
       };
-      
-      // Only add fields if they have values (not empty strings)
-      if (data.firstName && data.firstName.trim()) requestBody.firstName = data.firstName;
-      if (data.lastName && data.lastName.trim()) requestBody.lastName = data.lastName;
-      if (data.email && data.email.trim()) requestBody.email = data.email;
-      if (data.phone && data.phone.trim()) requestBody.phone = data.phone;
-      
-      // Add optional fields if present
-      if (data.address1) requestBody.address1 = data.address1;
-      if (data.city) requestBody.city = data.city;
-      if (data.state) requestBody.state = data.state;
-      if (data.postalCode) requestBody.postalCode = data.postalCode;
-      if (data.tags && data.tags.length > 0) requestBody.tags = data.tags;
-      
-      // Add custom fields
-      if (data.customField && Object.keys(data.customField).length > 0) {
-        requestBody.customField = data.customField;
-      }
 
       console.log('Sending to GHL:', {
         endpoint: this.endpoint,
+        authType: this.authType,
         hasAuth: !!this.apiKey,
         locationId: this.locationId,
         body: requestBody
       });
 
-      // Build headers for GoHighLevel API v1
+      // Build headers based on auth type
       const headers: Record<string, string> = {
-        'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Version': '2021-07-28',
       };
+      
+      // Set authorization header based on auth type
+      if (this.authType === 'jwt') {
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+      } else {
+        // For API key, try both header formats
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+        // Some accounts might use this format
+        headers['X-API-Key'] = this.apiKey;
+      }
 
       const response = await fetch(this.endpoint, {
         method: 'POST',
@@ -127,16 +131,22 @@ export class GoHighLevelService {
           headers: Object.fromEntries(response.headers.entries()),
           data: responseData,
           endpoint: this.endpoint,
+          authType: this.authType,
           locationId: this.locationId
         });
         
-        // Special handling for JWT errors
-        if (response.status === 401 || (responseData && typeof responseData === 'string' && responseData.includes('Invalid JWT'))) {
-          console.error('JWT Authentication Failed - Token may be expired or invalid');
-          console.error('JWT Token info:', {
+        // Special handling for auth errors
+        if (response.status === 401) {
+          if (this.authType === 'jwt') {
+            console.error('JWT Authentication Failed - Token may be expired or invalid');
+            console.error('Consider using an API Key instead of JWT');
+          } else {
+            console.error('API Key Authentication Failed');
+          }
+          console.error('Auth info:', {
             tokenLength: this.apiKey.length,
             tokenPrefix: this.apiKey.substring(0, 20) + '...',
-            extractedLocationId: this.locationId
+            authType: this.authType
           });
         }
         
@@ -188,10 +198,10 @@ export class GoHighLevelService {
   // Format form data for Go High Level
   formatFormData(formData: any): GHLContactData {
     const ghlData: GHLContactData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
+      firstName: formData.firstName || '',
+      lastName: formData.lastName || '',
+      email: formData.email || '',
+      phone: formData.phone || '',
       customField: {
         propertyAddress: formData.address,
         propertyCondition: formData.propertyCondition,
