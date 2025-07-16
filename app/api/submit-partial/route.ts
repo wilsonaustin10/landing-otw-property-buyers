@@ -18,53 +18,6 @@ function validatePartialData(data: Partial<LeadFormData>): boolean {
   return true;
 }
 
-// Send data to Zapier webhook
-async function sendToZapier(data: Partial<LeadFormData>) {
-  // Debug log to check environment variable
-  console.log('ZAPIER_WEBHOOK_URL value:', process.env.ZAPIER_WEBHOOK_URL);
-  
-  // Use environment variable or fallback to the value from .env.local if it exists
-  const webhookUrl = process.env.ZAPIER_WEBHOOK_URL;
-  
-  if (!webhookUrl || webhookUrl === 'YOUR_ZAPIER_WEBHOOK_URL') {
-    console.log('Zapier webhook URL not configured, skipping Zapier integration');
-    return null;
-  }
-
-  try {
-    // Create a formatted payload for Zapier
-    const payload = {
-      ...data,
-      submissionType: 'partial',
-      formattedTimestamp: new Date().toLocaleString(),
-      phoneRaw: data.phone ? data.phone.replace(/\D/g, '') : ''
-    };
-
-    // Send to Zapier webhook
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Zapier webhook error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorText
-      });
-      throw new Error(`Failed to send to Zapier: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error in sendToZapier:', error);
-    throw error;
-  }
-}
 
 /**
  * API Route for saving initial lead data (address and phone)
@@ -131,44 +84,34 @@ export async function POST(request: Request) {
       submissionType: 'partial'
     });
 
-    // Send to Go High Level first (if enabled)
-    let ghlSuccess = false;
-    if (goHighLevel.isEnabled()) {
-      try {
-        const ghlResult = await goHighLevel.sendLeadWithRetry(goHighLevel.formatFormData(leadData));
-        if (ghlResult.success) {
-          console.log('Successfully sent to Go High Level');
-          ghlSuccess = true;
-        } else {
-          console.error('Failed to send to Go High Level:', ghlResult.error);
-        }
-      } catch (error) {
-        console.error('Unexpected error sending to Go High Level:', error);
-      }
+    // Debug: Log environment variable status
+    console.log('Environment check:', {
+      hasGhlApiKey: !!process.env.GHL_API_KEY,
+      hasGhlEndpoint: !!process.env.NEXT_PUBLIC_GHL_ENDPOINT,
+      ghlEndpoint: process.env.NEXT_PUBLIC_GHL_ENDPOINT,
+      ghlEnabled: goHighLevel.isEnabled()
+    });
+
+    // Send to Go High Level
+    if (!goHighLevel.isEnabled()) {
+      throw new Error('Go High Level integration is not configured. Please check environment variables.');
     }
 
-    // Send to Zapier webhook (if configured)
-    let zapierSuccess = false;
     try {
-      const zapierResult = await sendToZapier(leadData);
-      if (zapierResult !== null) {
-        console.log('Successfully sent to Zapier webhook');
-        zapierSuccess = true;
+      const ghlResult = await goHighLevel.sendLeadWithRetry(goHighLevel.formatFormData(leadData));
+      if (ghlResult.success) {
+        console.log('Successfully sent to Go High Level');
+        return NextResponse.json({ 
+          success: true,
+          leadId
+        });
+      } else {
+        console.error('Failed to send to Go High Level:', ghlResult.error);
+        throw new Error(`Go High Level integration failed: ${ghlResult.error}`);
       }
     } catch (error) {
-      console.error('Failed to send to Zapier:', error);
-    }
-
-    // Return success if at least one integration worked
-    if (ghlSuccess || zapierSuccess) {
-      return NextResponse.json({ 
-        success: true,
-        leadId
-      });
-    } else if (!goHighLevel.isEnabled() && !zapierSuccess) {
-      throw new Error('No CRM integration configured or all integrations failed');
-    } else {
-      throw new Error('All CRM integrations failed');
+      console.error('Unexpected error sending to Go High Level:', error);
+      throw error;
     }
 
   } catch (error) {
