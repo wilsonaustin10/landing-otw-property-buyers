@@ -29,11 +29,27 @@ export class GoHighLevelService {
   private apiKey: string;
   private endpoint: string;
   private enabled: boolean;
+  private locationId: string;
 
   constructor() {
     this.apiKey = process.env.GHL_API_KEY || '';
     this.endpoint = process.env.NEXT_PUBLIC_GHL_ENDPOINT || '';
     this.enabled = Boolean(this.apiKey && this.endpoint);
+    
+    // Extract location ID from JWT token if available
+    this.locationId = '';
+    if (this.apiKey) {
+      try {
+        const tokenParts = this.apiKey.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+          this.locationId = payload.location_id || '';
+          console.log('Extracted location ID:', this.locationId);
+        }
+      } catch (error) {
+        console.error('Failed to extract location ID from token:', error);
+      }
+    }
   }
 
   isEnabled(): boolean {
@@ -55,6 +71,7 @@ export class GoHighLevelService {
         },
         body: JSON.stringify({
           ...data,
+          locationId: this.locationId,
           source: data.source || 'Website Form',
         }),
       });

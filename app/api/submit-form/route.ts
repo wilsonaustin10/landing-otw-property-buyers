@@ -40,8 +40,9 @@ async function sendToZapier(data: LeadFormData) {
   // Use environment variable or fallback to the value from .env.local if it exists
   const webhookUrl = process.env.ZAPIER_WEBHOOK_URL;
   
-  if (!webhookUrl) {
-    throw new Error('Zapier webhook URL not configured');
+  if (!webhookUrl || webhookUrl === 'YOUR_ZAPIER_WEBHOOK_URL') {
+    console.log('Zapier webhook URL not configured, skipping Zapier integration');
+    return null;
   }
 
   try {
@@ -138,33 +139,44 @@ export async function POST(request: Request) {
       lastUpdated: timestamp
     };
 
-    // 4. Send to Zapier webhook
-    try {
-      const result = await sendToZapier(formData);
-      console.log('Successfully sent to Zapier webhook');
-      
-      // Send to Go High Level if enabled (non-blocking)
-      if (goHighLevel.isEnabled()) {
-        goHighLevel.sendLeadWithRetry(goHighLevel.formatFormData(formData))
-          .then(result => {
-            if (result.success) {
-              console.log('Successfully sent to Go High Level');
-            } else {
-              console.error('Failed to send to Go High Level:', result.error);
-            }
-          })
-          .catch(error => {
-            console.error('Unexpected error sending to Go High Level:', error);
-          });
+    // 4. Send to Go High Level first (if enabled)
+    let ghlSuccess = false;
+    if (goHighLevel.isEnabled()) {
+      try {
+        const ghlResult = await goHighLevel.sendLeadWithRetry(goHighLevel.formatFormData(formData));
+        if (ghlResult.success) {
+          console.log('Successfully sent to Go High Level');
+          ghlSuccess = true;
+        } else {
+          console.error('Failed to send to Go High Level:', ghlResult.error);
+        }
+      } catch (error) {
+        console.error('Unexpected error sending to Go High Level:', error);
       }
-      
+    }
+
+    // Send to Zapier webhook (if configured)
+    let zapierSuccess = false;
+    try {
+      const zapierResult = await sendToZapier(formData);
+      if (zapierResult !== null) {
+        console.log('Successfully sent to Zapier webhook');
+        zapierSuccess = true;
+      }
+    } catch (error) {
+      console.error('Failed to send to Zapier:', error);
+    }
+
+    // Return success if at least one integration worked
+    if (ghlSuccess || zapierSuccess) {
       return NextResponse.json({ 
         success: true,
         leadId: data.leadId
       });
-    } catch (error) {
-      console.error('Failed to send to Zapier:', error);
-      throw error;
+    } else if (!goHighLevel.isEnabled() && !zapierSuccess) {
+      throw new Error('No CRM integration configured or all integrations failed');
+    } else {
+      throw new Error('All CRM integrations failed');
     }
 
   } catch (error) {
