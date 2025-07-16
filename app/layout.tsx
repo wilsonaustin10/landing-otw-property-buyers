@@ -1,13 +1,7 @@
-'use client';
-
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { FormProvider } from '../context/FormContext';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import ClientLayout from '../components/ClientLayout';
 import Script from 'next/script';
-import GoogleTagDebugger from '../components/GoogleTagDebugger';
-import GooglePlacesDebugger from '../components/GooglePlacesDebugger';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,16 +15,14 @@ export default function RootLayout({
       <head>
         {/* Google Site Verification - Replace with your actual verification code */}
         <meta name="google-site-verification" content="google-site-verification-code" />
-      </head>
-      <body className={inter.className}>
-        {/* Google Tag Manager - Using Next.js Script for better performance */}
-        <Script
+        
+        {/* CRITICAL: Google Tag (gtag.js) - MUST be in <head> for Google to detect it */}
+        {/* Using standard script tags as Google requires - not Next.js Script component */}
+        <script
+          async
           src="https://www.googletagmanager.com/gtag/js?id=AW-17359126152"
-          strategy="afterInteractive"
         />
-        <Script
-          id="google-analytics"
-          strategy="afterInteractive"
+        <script
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -50,31 +42,11 @@ export default function RootLayout({
             `,
           }}
         />
-        
-        <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-          strategy="beforeInteractive"
-          onLoad={() => {
-            console.log('Google Maps script loaded');
-          }}
-          onError={(e) => {
-            console.error('Error loading Google Maps script:', e);
-          }}
-        />
-        <Script
-          src={`https://www.google.com/recaptcha/enterprise.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-          strategy="beforeInteractive"
-        />
-        
-        <FormProvider>
-          <Header />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-          <GoogleTagDebugger />
-          <GooglePlacesDebugger />
-        </FormProvider>
+      </head>
+      <body className={inter.className}>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );
