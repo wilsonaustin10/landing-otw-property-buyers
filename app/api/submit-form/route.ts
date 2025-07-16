@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { LeadFormData } from '@/types';
 import { rateLimit } from '@/utils/rateLimit';
-import { goHighLevel } from '@/utils/goHighLevel';
+import { goHighLevel } from '@/utils/goHighLevelV2';
 import { verifyRecaptchaToken } from '@/utils/recaptcha';
 import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
 
@@ -121,11 +121,14 @@ export async function POST(request: Request) {
     };
 
     // Debug: Log environment variable status
-    console.log('Environment check:', {
+    console.log('[API] Environment check:', {
       hasGhlApiKey: !!process.env.GHL_API_KEY,
+      ghlApiKeyLength: process.env.GHL_API_KEY?.length || 0,
+      ghlApiKeyPrefix: process.env.GHL_API_KEY?.substring(0, 20) + '...' || 'none',
       hasGhlEndpoint: !!process.env.NEXT_PUBLIC_GHL_ENDPOINT,
       ghlEndpoint: process.env.NEXT_PUBLIC_GHL_ENDPOINT,
-      ghlEnabled: goHighLevel.isEnabled()
+      ghlEnabled: goHighLevel.isEnabled(),
+      nodeEnv: process.env.NODE_ENV
     });
 
     // 4. Send to Go High Level
@@ -134,15 +137,19 @@ export async function POST(request: Request) {
     }
 
     try {
-      const ghlResult = await goHighLevel.sendLeadWithRetry(goHighLevel.formatFormData(formData));
+      console.log('[API] Formatting data for GHL...');
+      const ghlFormattedData = goHighLevel.formatFormData(formData);
+      console.log('[API] Sending to GHL with retry...');
+      const ghlResult = await goHighLevel.sendLeadWithRetry(ghlFormattedData);
+      
       if (ghlResult.success) {
-        console.log('Successfully sent to Go High Level');
+        console.log('[API] Successfully sent to Go High Level');
         return NextResponse.json({ 
           success: true,
           leadId: data.leadId
         });
       } else {
-        console.error('Failed to send to Go High Level:', ghlResult.error);
+        console.error('[API] Failed to send to Go High Level:', ghlResult.error);
         throw new Error(`Go High Level integration failed: ${ghlResult.error}`);
       }
     } catch (error) {
