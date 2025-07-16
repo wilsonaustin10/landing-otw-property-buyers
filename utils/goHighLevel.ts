@@ -62,27 +62,50 @@ export class GoHighLevelService {
     }
 
     try {
+      const requestBody = {
+        ...data,
+        locationId: this.locationId,
+        source: data.source || 'Website Form',
+      };
+
+      console.log('Sending to GHL:', {
+        endpoint: this.endpoint,
+        hasAuth: !!this.apiKey,
+        locationId: this.locationId,
+        body: requestBody
+      });
+
       const response = await fetch(this.endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'Version': '2021-07-28',
         },
-        body: JSON.stringify({
-          ...data,
-          locationId: this.locationId,
-          source: data.source || 'Website Form',
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      const responseData = await response.json() as GHLResponse;
+      let responseData: any;
+      const responseText = await response.text();
+      
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse GHL response:', responseText);
+        responseData = { message: responseText };
+      }
 
       if (!response.ok) {
-        console.error('GHL API Error:', responseData);
+        console.error('GHL API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          data: responseData
+        });
         return {
           success: false,
-          error: responseData.message || `API returned ${response.status}`,
+          error: responseData.message || responseData.error || `API returned ${response.status}`,
         };
       }
 
