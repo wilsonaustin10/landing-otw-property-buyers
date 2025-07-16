@@ -156,6 +156,29 @@ export class GoHighLevelService {
     }
   }
 
+  async searchContactByLeadId(leadId: string): Promise<{ success: boolean; contactId?: string; error?: string }> {
+    if (!this.enabled) {
+      return { success: false, error: 'Go High Level integration is not configured' };
+    }
+
+    try {
+      console.log('Searching for contact with leadId:', leadId);
+      
+      // Search for contacts with the leadId in custom fields
+      // Note: GHL v1 API doesn't have a direct search endpoint, so we'll need to use a different approach
+      // For now, we'll return success: false to indicate no existing contact found
+      // In production, you would use GHL's search API or webhooks to track contact IDs
+      
+      return { success: false, error: 'Search not implemented in v1 API' };
+    } catch (error) {
+      console.error('Error searching contact:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
   async sendLeadWithRetry(data: GHLContactData, maxRetries = 3): Promise<{ success: boolean; error?: string }> {
     let attempt = 0;
     let lastError = '';
@@ -187,10 +210,36 @@ export class GoHighLevelService {
 
   // Format form data for Go High Level
   formatFormData(formData: any): GHLContactData {
+    // For partial submissions without name, use a simple numbering system
+    const isPartial = formData.submissionType === 'partial';
+    const hasName = formData.firstName || formData.lastName;
+    
+    // Create a unique identifier based on timestamp
+    let firstName = formData.firstName || '';
+    let lastName = formData.lastName || '';
+    
+    if (isPartial && !hasName) {
+      // Use a simple numbering system for partial submissions
+      // Extract numbers from the leadId to create a unique but readable identifier
+      const leadIdNumbers = formData.leadId.match(/\d+/g);
+      const uniqueNumber = leadIdNumbers ? leadIdNumbers[0].slice(-6) : Date.now().toString().slice(-6);
+      
+      firstName = `New${uniqueNumber}`;
+      lastName = `Lead${uniqueNumber}`;
+    }
+    
+    // Handle email for different submission types
+    let email = formData.email;
+    if (isPartial && !formData.email) {
+      // For partial submissions, don't set an email
+      // This forces GHL to use phone as the unique identifier
+      email = undefined;
+    }
+    
     const ghlData: GHLContactData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
       phone: formData.phone,
       customField: {
         propertyAddress: formData.address,
@@ -200,9 +249,22 @@ export class GoHighLevelService {
         isPropertyListed: formData.isPropertyListed,
         submissionType: formData.submissionType,
         leadId: formData.leadId,
+        submissionTimestamp: new Date().toISOString(),
+        originalEmail: formData.email || 'Not provided' // Store original email if any
       },
-      tags: ['Website Lead', formData.submissionType === 'partial' ? 'Partial Lead' : 'Complete Lead'],
+      tags: ['Website Lead', 'PPC', formData.submissionType === 'partial' ? 'Partial Lead' : 'Complete Lead'],
     };
+    
+    // Remove empty email field if it exists
+    if (!email) {
+      delete ghlData.email;
+    }
+    
+    // For complete submissions, update the submission type
+    if (!isPartial && formData.submissionType === 'complete') {
+      ghlData.customField!.submissionType = 'complete';
+      ghlData.tags = ['Website Lead', 'PPC', 'Complete Lead'];
+    }
 
     // Parse address if available
     if (formData.address) {

@@ -84,7 +84,8 @@ export async function POST(request: Request) {
     const formData: LeadFormData = {
       ...data,
       timestamp: data.timestamp || timestamp,
-      lastUpdated: timestamp
+      lastUpdated: timestamp,
+      submissionType: 'complete' // Mark this as a complete submission
     };
 
     // Debug: Log environment variable status
