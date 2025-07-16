@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Script from 'next/script';
 import GoogleTagDebugger from '../components/GoogleTagDebugger';
+import GooglePlacesDebugger from '../components/GooglePlacesDebugger';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -52,7 +53,7 @@ export default function RootLayout({
         
         <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-          strategy="lazyOnload"
+          strategy="beforeInteractive"
           onLoad={() => {
             console.log('Google Maps script loaded');
           }}
@@ -62,7 +63,7 @@ export default function RootLayout({
         />
         <Script
           src={`https://www.google.com/recaptcha/enterprise.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-          strategy="lazyOnload"
+          strategy="beforeInteractive"
         />
         
         <FormProvider>
@@ -72,6 +73,7 @@ export default function RootLayout({
           </main>
           <Footer />
           <GoogleTagDebugger />
+          <GooglePlacesDebugger />
         </FormProvider>
       </body>
     </html>
