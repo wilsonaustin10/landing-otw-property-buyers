@@ -6,6 +6,7 @@ import { FormProvider } from '../context/FormContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Script from 'next/script';
+import GoogleTagDebugger from '../components/GoogleTagDebugger';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,23 +18,41 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Google Tag Manager - Load First for Detection */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17359126152"></script>
-        <script
+        {/* Google Site Verification - Replace with your actual verification code */}
+        <meta name="google-site-verification" content="google-site-verification-code" />
+      </head>
+      <body className={inter.className}>
+        {/* Google Tag Manager - Using Next.js Script for better performance */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17359126152"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'AW-17359126152');
-              gtag('config', 'AW-17041108639');
+              
+              // Google Ads Conversion Tracking
+              gtag('config', 'AW-17359126152', {
+                'page_path': window.location.pathname,
+              });
+              gtag('config', 'AW-17041108639', {
+                'page_path': window.location.pathname,
+              });
+              
+              // Google Analytics (if you have a GA4 property)
+              ${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? `gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}');` : ''}
             `,
           }}
         />
         
         <Script
           src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-          strategy="beforeInteractive"
+          strategy="lazyOnload"
           onLoad={() => {
             console.log('Google Maps script loaded');
           }}
@@ -43,16 +62,16 @@ export default function RootLayout({
         />
         <Script
           src={`https://www.google.com/recaptcha/enterprise.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-          strategy="beforeInteractive"
+          strategy="lazyOnload"
         />
-      </head>
-      <body className={inter.className}>
+        
         <FormProvider>
           <Header />
           <main className="flex-grow">
             {children}
           </main>
           <Footer />
+          <GoogleTagDebugger />
         </FormProvider>
       </body>
     </html>
