@@ -23,7 +23,13 @@ export default function GooglePlacesDebugger() {
   const startTime = Date.now();
 
   useEffect(() => {
+    let interval: NodeJS.Timeout;
+    let hasLoaded = false;
+
     const checkStatus = () => {
+      // Only check if not already loaded
+      if (hasLoaded) return true;
+
       const newStatus: ApiStatus = {
         apiKeyValid: verifyGoogleApiKey(),
         mapsLoaded: typeof window !== 'undefined' && !!window.google?.maps,
@@ -47,6 +53,7 @@ export default function GooglePlacesDebugger() {
 
       if (newStatus.placesLoaded) {
         newStatus.loadTime = Date.now() - startTime;
+        hasLoaded = true;
       }
 
       setStatus(newStatus);
@@ -58,13 +65,21 @@ export default function GooglePlacesDebugger() {
       return false;
     };
 
-    const interval = setInterval(() => {
-      if (checkStatus()) {
-        clearInterval(interval);
-      }
-    }, 100);
+    // Initial check
+    checkStatus();
 
-    return () => clearInterval(interval);
+    // Only set interval if not already loaded
+    if (!hasLoaded) {
+      interval = setInterval(() => {
+        if (checkStatus()) {
+          clearInterval(interval);
+        }
+      }, 500); // Increased interval to reduce checks
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [startTime]);
 
   // Only show in development

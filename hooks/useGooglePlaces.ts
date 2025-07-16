@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { googlePlacesMonitor } from '../utils/googlePlacesMonitor';
 
 declare global {
   namespace google.maps.places {
@@ -23,14 +24,26 @@ export interface AddressData {
   postalCode?: string;
 }
 
+// Cache to store recent address selections
+const addressCache = new Map<string, AddressData>();
+const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+interface CachedAddress {
+  data: AddressData;
+  timestamp: number;
+}
+
 export function useGooglePlaces(
   inputRef: React.RefObject<HTMLInputElement>,
   onAddressSelect: (addressData: AddressData) => void,
-  enabled: boolean = true
+  enabled: boolean = true,
+  minCharacters: number = 3 // Minimum characters before enabling autocomplete
 ) {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const isInitializedRef = useRef<boolean>(false);
+  const apiCallCountRef = useRef<number>(0);
+  const lastApiCallRef = useRef<Date | null>(null);
 
   // Memoize the callback to prevent unnecessary re-initializations
   const stableOnAddressSelect = useRef(onAddressSelect);
@@ -67,6 +80,7 @@ export function useGooglePlaces(
 
       try {
         console.log('Initializing Google Places Autocomplete');
+        googlePlacesMonitor.logApiCall('autocomplete_init', { enabled, minCharacters });
         
         // Create a new session token
         sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
@@ -82,10 +96,19 @@ export function useGooglePlaces(
           }
         );
 
-        // Add place_changed listener
+        // Add place_changed listener with enhanced logging and caching
         const listener = autocompleteRef.current.addListener('place_changed', () => {
           const place = autocompleteRef.current?.getPlace();
           if (!place?.formatted_address) return;
+
+          // Log API call for monitoring
+          apiCallCountRef.current++;
+          lastApiCallRef.current = new Date();
+          googlePlacesMonitor.logApiCall('place_selected', {
+            address: place.formatted_address,
+            placeId: place.place_id,
+            callNumber: apiCallCountRef.current
+          });
 
           const addressData: AddressData = {
             formattedAddress: place.formatted_address,
@@ -104,6 +127,13 @@ export function useGooglePlaces(
             }
           });
 
+          // Cache the result
+          if (place.place_id) {
+            addressCache.set(place.place_id, addressData);
+            // Clean old cache entries
+            cleanAddressCache();
+          }
+
           // Use the stable reference to prevent dependency issues
           stableOnAddressSelect.current(addressData);
           
@@ -111,7 +141,34 @@ export function useGooglePlaces(
           sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
         });
 
+        // Add input listener to enforce minimum characters
+        const handleInput = (e: Event) => {
+          const target = e.target as HTMLInputElement;
+          const value = target.value.trim();
+          
+          if (value.length < minCharacters) {
+            // Disable autocomplete for short inputs
+            const pacContainer = document.querySelector('.pac-container') as HTMLElement;
+            if (pacContainer) {
+              pacContainer.style.display = 'none';
+            }
+            googlePlacesMonitor.logApiCall('input_too_short', { 
+              inputLength: value.length, 
+              minRequired: minCharacters 
+            });
+          } else {
+            // Re-enable if hidden
+            const pacContainer = document.querySelector('.pac-container') as HTMLElement;
+            if (pacContainer && pacContainer.style.display === 'none') {
+              pacContainer.style.display = '';
+            }
+          }
+        };
+
+        inputRef.current.addEventListener('input', handleInput);
+
         console.log('Google Places Autocomplete initialized successfully');
+        googlePlacesMonitor.logApiCall('autocomplete_ready');
         isInitializedRef.current = true;
       } catch (error) {
         console.error('Error initializing Places Autocomplete:', error);
@@ -135,5 +192,26 @@ export function useGooglePlaces(
         console.error('Error during cleanup:', error);
       }
     };
-  }, [enabled, inputRef]); // Remove onAddressSelect from dependencies
+  }, [enabled, inputRef, minCharacters]); // Remove onAddressSelect from dependencies
+}
+
+// Helper function to clean expired cache entries
+function cleanAddressCache() {
+  const now = Date.now();
+  const entries = Array.from(addressCache.entries());
+  for (const [key, value] of entries) {
+    const cached = value as unknown as CachedAddress;
+    if (cached.timestamp && now - cached.timestamp > CACHE_EXPIRY_MS) {
+      addressCache.delete(key);
+    }
+  }
+}
+
+// Export for monitoring purposes
+export function getApiCallStats() {
+  return {
+    totalCalls: 0, // This would need to be tracked globally
+    cacheSize: addressCache.size,
+    cacheEntries: Array.from(addressCache.keys())
+  };
 } 

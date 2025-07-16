@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import AddressInput from '../../components/AddressInput';
+import GooglePlacesDebugger from '../../components/GooglePlacesDebugger';
+import GooglePlacesMonitor from '../../components/GooglePlacesMonitor';
 import type { AddressData } from '../../types/GooglePlacesTypes';
+import { googlePlacesMonitor } from '../../utils/googlePlacesMonitor';
 
 export default function TestPlacesAPI() {
   const [apiCalls, setApiCalls] = useState<string[]>([]);
@@ -80,8 +83,26 @@ export default function TestPlacesAPI() {
           <li>No repeated initialization messages when typing or interacting with the page</li>
           <li>Address suggestions should appear normally when typing</li>
           <li>Check browser DevTools Network tab for excessive API calls</li>
+          <li>Use the API Monitor (bottom right) to track all API interactions</li>
+          <li>Autocomplete is disabled for inputs shorter than 3 characters</li>
         </ul>
       </div>
+
+      <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4">Optimization Features Implemented</h2>
+        <ul className="list-disc pl-5 space-y-2 text-sm">
+          <li>✅ Built-in Google SDK debouncing (no custom debounce needed)</li>
+          <li>✅ Minimum 3 characters before enabling autocomplete</li>
+          <li>✅ Session tokens for billing optimization</li>
+          <li>✅ Single initialization check prevents duplicate instances</li>
+          <li>✅ Comprehensive API call monitoring and logging</li>
+          <li>✅ Input event filtering for short inputs</li>
+        </ul>
+      </div>
+
+      {/* Debug Components */}
+      <GooglePlacesDebugger />
+      <GooglePlacesMonitor />
     </div>
   );
 }

@@ -63,8 +63,8 @@ export default function AddressInput({
     }
   }, [onAddressSelect, updateFormData]);
 
-  // Initialize Google Places - enabled only when not readOnly
-  useGooglePlaces(inputRef, handleAddressSelect, !readOnly);
+  // Initialize Google Places with minimum 3 characters requirement
+  useGooglePlaces(inputRef, handleAddressSelect, !readOnly, 3);
 
   const error = externalError || localError || errors?.address;
 
