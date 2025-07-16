@@ -36,6 +36,10 @@ export default function RootLayout({
           src="https://www.googletagmanager.com/gtag/js?id=AW-17041108639"
         />
         <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17359126152"
+        />
+        <Script
           id="gtag-init"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -44,6 +48,7 @@ export default function RootLayout({
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
               gtag('config', 'AW-17041108639');
+              gtag('config', 'AW-17359126152');
             `,
           }}
         />
