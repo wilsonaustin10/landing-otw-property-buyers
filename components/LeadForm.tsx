@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { LeadFormData } from '../types';
 import { trackEvent } from '../utils/analytics';
 import { useGooglePlaces, AddressData } from '../hooks/useGooglePlaces';
+import { useRecaptcha } from '../hooks/useRecaptcha';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -25,6 +26,7 @@ export default function LeadForm() {
   const addressInputRef = useRef<HTMLInputElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const router = useRouter();
+  const { executeRecaptcha } = useRecaptcha();
 
   useEffect(() => {
     const checkGoogleMapsLoaded = () => {
@@ -94,7 +96,29 @@ export default function LeadForm() {
     trackEvent('form_submission', { step: 1 });
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Execute reCAPTCHA
+      const recaptchaToken = await executeRecaptcha('submit_lead_form');
+      
+      if (!recaptchaToken) {
+        throw new Error('reCAPTCHA verification failed');
+      }
+
+      // Submit form with reCAPTCHA token
+      const response = await fetch('/api/submit-form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          recaptchaToken,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Form submission failed');
+      }
+
       router.push('/property-listed');
     } catch (error) {
       console.error('Error submitting form:', error);

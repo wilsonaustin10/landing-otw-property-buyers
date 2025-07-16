@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import { LeadFormData } from '@/types';
 import { rateLimit } from '@/utils/rateLimit';
 import { goHighLevel } from '@/utils/goHighLevel';
+import { verifyRecaptchaToken } from '@/utils/recaptcha';
+import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
 
 // Validate complete form data
 function validateFormData(data: Partial<LeadFormData>): data is LeadFormData {
@@ -72,6 +74,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // 2a. Verify reCAPTCHA token
+    if (data.recaptchaToken) {
+      const recaptchaResult = await verifyRecaptchaToken(data.recaptchaToken, 'submit_lead_form');
+      if (!recaptchaResult.success) {
+        console.error('reCAPTCHA verification failed');
+        return NextResponse.json(
+          { error: 'reCAPTCHA verification failed' },
+          { status: 400 }
+        );
+      }
+      console.log('reCAPTCHA verified successfully, score:', recaptchaResult.score);
+      // Remove the token from data before processing
+      delete data.recaptchaToken;
+    }
+
     if (!validateFormData(data)) {
       console.error('Invalid form data:', data);
       return NextResponse.json(
@@ -79,6 +96,21 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // 2b. Verify phone number with Numverify
+    const phoneVerification = await verifyPhoneNumberWithCache(data.phone);
+    if (!phoneVerification.isValid) {
+      console.error('Phone verification failed:', phoneVerification.error);
+      return NextResponse.json(
+        { error: phoneVerification.error || 'Invalid phone number' },
+        { status: 400 }
+      );
+    }
+    console.log('Phone verified successfully:', {
+      number: phoneVerification.phoneNumber,
+      lineType: phoneVerification.lineType,
+      carrier: phoneVerification.carrier
+    });
 
     // 3. Prepare data with tracking information
     const formData: LeadFormData = {
