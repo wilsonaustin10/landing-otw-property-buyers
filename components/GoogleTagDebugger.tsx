@@ -15,7 +15,7 @@ export default function GoogleTagDebugger() {
   useEffect(() => {
     // Check if gtag is loaded
     const checkGtag = setInterval(() => {
-      if (typeof window !== 'undefined' && window.gtag && window.dataLayer) {
+      if (typeof window !== 'undefined' && typeof window.gtag === 'function' && window.dataLayer) {
         setIsGtagLoaded(true);
         clearInterval(checkGtag);
         
@@ -93,7 +93,7 @@ export default function GoogleTagDebugger() {
           <div className="mt-4">
             <button
               onClick={() => {
-                if (window.gtag) {
+                if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
                   window.gtag('event', 'test_event', {
                     event_category: 'Debug',
                     event_label: 'Manual Test'

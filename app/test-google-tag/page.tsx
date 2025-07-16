@@ -9,7 +9,7 @@ export default function TestGoogleTag() {
   useEffect(() => {
     // Check gtag status
     const checkInterval = setInterval(() => {
-      if (typeof window !== 'undefined' && window.gtag && window.dataLayer) {
+      if (typeof window !== 'undefined' && typeof window.gtag === 'function' && window.dataLayer) {
         setGtagStatus('✅ Google Tag is loaded and ready');
         clearInterval(checkInterval);
       }
@@ -25,7 +25,7 @@ export default function TestGoogleTag() {
   }, [gtagStatus]);
 
   const sendTestEvent = (eventName: string, parameters: any) => {
-    if (window.gtag) {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
       window.gtag('event', eventName, parameters);
       const eventLog = `${new Date().toLocaleTimeString()} - Sent: ${eventName} ${JSON.stringify(parameters)}`;
       setEvents(prev => [...prev, eventLog]);
