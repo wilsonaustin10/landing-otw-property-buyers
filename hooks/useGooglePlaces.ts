@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 declare global {
   namespace google.maps.places {
@@ -25,12 +25,20 @@ export interface AddressData {
 
 export function useGooglePlaces(
   inputRef: React.RefObject<HTMLInputElement>,
-  onAddressSelect: (addressData: AddressData) => void
+  onAddressSelect: (addressData: AddressData) => void,
+  enabled: boolean = true
 ) {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  const isInitializedRef = useRef<boolean>(false);
+
+  // Memoize the callback to prevent unnecessary re-initializations
+  const stableOnAddressSelect = useRef(onAddressSelect);
+  stableOnAddressSelect.current = onAddressSelect;
 
   useEffect(() => {
+    // Skip if disabled or already initialized
+    if (!enabled || isInitializedRef.current) return;
     let mounted = true;
     let retryCount = 0;
     const maxRetries = 50; // 5 seconds with 100ms intervals
@@ -48,6 +56,12 @@ export function useGooglePlaces(
         } else {
           console.error('Google Places API failed to load after 5 seconds');
         }
+        return;
+      }
+
+      // Prevent re-initialization if autocomplete already exists
+      if (autocompleteRef.current) {
+        console.log('Google Places Autocomplete already initialized, skipping...');
         return;
       }
 
@@ -90,13 +104,15 @@ export function useGooglePlaces(
             }
           });
 
-          onAddressSelect(addressData);
+          // Use the stable reference to prevent dependency issues
+          stableOnAddressSelect.current(addressData);
           
           // Create a new session token after selection
           sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
         });
 
         console.log('Google Places Autocomplete initialized successfully');
+        isInitializedRef.current = true;
       } catch (error) {
         console.error('Error initializing Places Autocomplete:', error);
       }
@@ -108,14 +124,16 @@ export function useGooglePlaces(
     // Cleanup
     return () => {
       mounted = false;
+      isInitializedRef.current = false;
       try {
         if (autocompleteRef.current && window.google?.maps?.event) {
           google.maps.event.clearInstanceListeners(autocompleteRef.current);
+          autocompleteRef.current = null;
         }
         sessionTokenRef.current = null;
       } catch (error) {
         console.error('Error during cleanup:', error);
       }
     };
-  }, [inputRef, onAddressSelect]);
+  }, [enabled, inputRef]); // Remove onAddressSelect from dependencies
 } 

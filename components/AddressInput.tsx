@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { useGooglePlaces } from '../hooks/useGooglePlaces';
 import type { AddressData } from '../types/GooglePlacesTypes';
 import { Loader2 } from 'lucide-react';
@@ -28,8 +28,8 @@ export default function AddressInput({
   const [localError, setLocalError] = useState<string>('');
   const { formState, updateFormData, errors } = useForm();
 
-  // Handle Google Places selection
-  const handleAddressSelect = async (addressData: AddressData) => {
+  // Handle Google Places selection - memoized to prevent re-initialization
+  const handleAddressSelect = useCallback(async (addressData: AddressData) => {
     setIsProcessing(true);
     
     try {
@@ -61,12 +61,10 @@ export default function AddressInput({
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [onAddressSelect, updateFormData]);
 
-  // Only initialize Google Places if not readOnly
-  if (!readOnly) {
-    useGooglePlaces(inputRef, handleAddressSelect);
-  }
+  // Initialize Google Places - enabled only when not readOnly
+  useGooglePlaces(inputRef, handleAddressSelect, !readOnly);
 
   const error = externalError || localError || errors?.address;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from '../context/FormContext';
 import AddressInput from './AddressInput';
@@ -33,7 +33,7 @@ export default function PropertyForm() {
     validateForm();
   };
 
-  const handleAddressSelect = (addressData: AddressData) => {
+  const handleAddressSelect = useCallback((addressData: AddressData) => {
     trackEvent('property_address_selected', { 
       address: addressData.formattedAddress,
       placeId: addressData.placeId 
@@ -42,7 +42,7 @@ export default function PropertyForm() {
     setErrors(prev => ({ ...prev, address: undefined }));
     setTouched(prev => ({ ...prev, address: true }));
     setStep(2);
-  };
+  }, [updateFormData]);
 
   const formatPhoneNumber = (value: string) => {
     const phone = value.replace(/\D/g, '');

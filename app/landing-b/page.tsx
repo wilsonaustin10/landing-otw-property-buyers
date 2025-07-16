@@ -23,7 +23,7 @@ export default function LandingBPage() {
     }
   }, [formState.firstName, formState.lastName]);
 
-  const handleAddressSelect = (addressData: AddressData) => {
+  const handleAddressSelect = useCallback((addressData: AddressData) => {
     updateFormData({
       address: addressData.formattedAddress,
       streetAddress: addressData.street,
@@ -33,7 +33,7 @@ export default function LandingBPage() {
       placeId: addressData.placeId,
     });
     setLocalErrors(prev => ({ ...prev, address: '' }));
-  };
+  }, [updateFormData]);
 
   const handleLocalFullNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalFullName(e.target.value);
