@@ -102,6 +102,7 @@ export class GoHighLevelService {
       const headers: Record<string, string> = {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
+        'Version': '2021-07-28'
       };
 
       const response = await fetch(this.endpoint, {
