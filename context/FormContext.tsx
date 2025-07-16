@@ -217,6 +217,14 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
         clearFormData();
         // Track successful submission
         if (typeof window !== 'undefined') {
+          // CRITICAL: Track the Google Ads conversion that's being monitored
+          (window as any).gtag?.('event', 'conversion', {
+            'send_to': 'AW-17359126152/c162CKD-jfIaEIj9vNVA',
+            'value': 1.0,
+            'currency': 'USD'
+          });
+          
+          // Also track general analytics event
           (window as any).gtag?.('event', 'form_submission_success', {
             event_category: 'Lead',
             event_label: 'Complete'

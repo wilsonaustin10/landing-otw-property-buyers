@@ -12,6 +12,14 @@ export default function ThankYouPage() {
     trackEvent('thank_you_page_view');
     
     if (typeof window !== 'undefined' && window.gtag) {
+      // Primary conversion: Submit lead form (the one Google Ads is looking for)
+      window.gtag('event', 'conversion', {
+        'send_to': 'AW-17359126152/c162CKD-jfIaEIj9vNVA',
+        'value': 1.0,
+        'currency': 'USD'
+      });
+      
+      // Secondary conversion (if you still want to track this one)
       window.gtag('event', 'conversion', {
         'send_to': 'AW-17041108639/fLFZCLzz-fkYELD4yf8p',
       });
