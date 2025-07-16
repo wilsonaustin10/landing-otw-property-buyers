@@ -14,6 +14,7 @@ export default function Header() {
                 src="/OTW TP.png"
                 alt="OTW Property Buyers"
                 fill
+                sizes="(max-width: 640px) 280px, (max-width: 768px) 320px, (max-width: 1024px) 400px, 500px"
                 style={{ objectFit: 'contain' }}
                 priority
                 className="hover:opacity-90 transition-opacity"

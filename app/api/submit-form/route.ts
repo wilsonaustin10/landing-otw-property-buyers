@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { LeadFormData } from '@/types';
 import { rateLimit } from '@/utils/rateLimit';
+import { goHighLevel } from '@/utils/goHighLevel';
 
 // Validate complete form data
 function validateFormData(data: Partial<LeadFormData>): data is LeadFormData {
@@ -141,6 +142,21 @@ export async function POST(request: Request) {
     try {
       const result = await sendToZapier(formData);
       console.log('Successfully sent to Zapier webhook');
+      
+      // Send to Go High Level if enabled (non-blocking)
+      if (goHighLevel.isEnabled()) {
+        goHighLevel.sendLeadWithRetry(goHighLevel.formatFormData(formData))
+          .then(result => {
+            if (result.success) {
+              console.log('Successfully sent to Go High Level');
+            } else {
+              console.error('Failed to send to Go High Level:', result.error);
+            }
+          })
+          .catch(error => {
+            console.error('Unexpected error sending to Go High Level:', error);
+          });
+      }
       
       return NextResponse.json({ 
         success: true,
