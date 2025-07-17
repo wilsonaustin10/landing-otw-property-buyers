@@ -11,15 +11,15 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <section id="property-form" className="pt-16 pb-8 px-4 bg-gradient-to-br from-primary to-secondary bg-opacity-90">
+      <section id="property-form" className="pt-4 pb-8 px-4 bg-gradient-to-br from-primary to-secondary bg-opacity-90">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="mb-3 md:mb-6 flex justify-center">
+            <div className="mb-1.5 md:mb-3 flex justify-center">
               <Image
                 src="/OTW TP.png"
                 alt="OTW Property Buyers"
-                width={300}
-                height={80}
+                width={200}
+                height={53}
                 className="object-contain animate-float"
                 priority
               />
