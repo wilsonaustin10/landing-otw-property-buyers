@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 export default function Footer() {
   return (
-    <footer className="bg-footer-bg text-footer-text">
+    <footer className="bg-primary text-footer-text">
       <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10 md:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {/* Company Info */}

@@ -5,6 +5,7 @@ import TrustBadges from '../components/TrustBadges';  // Kept for future use
 import { CheckCircle } from 'lucide-react';
 import { Benefits } from '../components/Benefits';
 import { HowItWorks } from '../components/HowItWorks';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -13,6 +14,16 @@ export default function Home() {
       <section id="property-form" className="pt-20 pb-16 px-4 bg-gradient-to-br from-primary to-secondary bg-opacity-90">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mx-auto text-center">
+            <div className="mb-8 flex justify-center">
+              <Image
+                src="/OTW TP.png"
+                alt="OTW Property Buyers"
+                width={300}
+                height={80}
+                className="object-contain animate-float"
+                priority
+              />
+            </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
               The fastest and easiest way to sell your house
             </h1>
