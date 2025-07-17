@@ -11,10 +11,10 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <section id="property-form" className="pt-20 pb-16 px-4 bg-gradient-to-br from-primary to-secondary bg-opacity-90">
+      <section id="property-form" className="pt-16 pb-8 px-4 bg-gradient-to-br from-primary to-secondary bg-opacity-90">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="mb-8 flex justify-center">
+            <div className="mb-3 md:mb-6 flex justify-center">
               <Image
                 src="/OTW TP.png"
                 alt="OTW Property Buyers"
@@ -24,17 +24,17 @@ export default function Home() {
                 priority
               />
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-6">
               The fastest and easiest way to sell your house
             </h1>
-            <p className="text-xl text-white mb-8">
+            <p className="text-xl text-white mb-4 md:mb-8">
               Sell your house in as little as 7 days - no repairs, no fees, and we cover closing costs
             </p>
           </div>
           <div className="max-w-md mx-auto">
             <PropertyForm />
           </div>
-          <Benefits className="mx-auto mt-12" />
+          <Benefits className="mx-auto mt-8 md:mt-12" />
         </div>
       </section>
 
