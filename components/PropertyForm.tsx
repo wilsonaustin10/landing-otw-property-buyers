@@ -137,13 +137,16 @@ export default function PropertyForm() {
       try {
         const text = await response.text();
         result = text ? JSON.parse(text) : {};
-        if (!response.ok) {
-          console.error('API error response:', text);
-          throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
       } catch (parseError) {
         console.error('Error parsing API response:', parseError);
         throw new Error(`Failed to parse API response: ${response.status} ${response.statusText}`);
+      }
+      
+      if (!response.ok) {
+        // Extract error message from API response
+        const errorMessage = result.error || `API error: ${response.status} ${response.statusText}`;
+        console.error('API error response:', errorMessage);
+        throw new Error(errorMessage);
       }
       
       if (!result.success) {

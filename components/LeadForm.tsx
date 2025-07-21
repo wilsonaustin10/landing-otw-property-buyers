@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { LeadFormData } from '../types';
 import { trackEvent } from '../utils/analytics';
 import { useGooglePlaces, AddressData } from '../hooks/useGooglePlaces';
-import { useRecaptcha } from '../hooks/useRecaptcha';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -26,7 +25,6 @@ export default function LeadForm() {
   const addressInputRef = useRef<HTMLInputElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const router = useRouter();
-  const { executeRecaptcha } = useRecaptcha();
 
   useEffect(() => {
     const checkGoogleMapsLoaded = () => {
@@ -96,37 +94,87 @@ export default function LeadForm() {
     trackEvent('form_submission', { step: 1 });
     
     try {
-      // Execute reCAPTCHA
-      const recaptchaToken = await executeRecaptcha('submit_lead_form');
-      
-      if (!recaptchaToken) {
-        throw new Error('reCAPTCHA verification failed');
-      }
-
-      // Submit form with reCAPTCHA token
-      const response = await fetch('/api/submit-form', {
+      // Submit form data to partial endpoint (no reCAPTCHA needed for initial lead capture)
+      const response = await fetch('/api/submit-partial', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           ...formData,
-          recaptchaToken,
+          consent: formData.consent,
         }),
       });
 
+      let result;
+      try {
+        const text = await response.text();
+        result = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error('Error parsing API response:', parseError);
+        throw new Error(`Failed to parse API response: ${response.status} ${response.statusText}`);
+      }
+      
       if (!response.ok) {
-        throw new Error('Form submission failed');
+        // Extract error message from API response
+        const errorMessage = result.error || `API error: ${response.status} ${response.statusText}`;
+        console.error('API error response:', errorMessage);
+        
+        // Check if it's a phone validation error
+        if (errorMessage.toLowerCase().includes('phone') || errorMessage.toLowerCase().includes('invalid number')) {
+          setErrors(prev => ({
+            ...prev,
+            phone: errorMessage
+          }));
+          setTouched(prev => ({ ...prev, phone: true }));
+          trackEvent('phone_validation_api_error', { error: errorMessage });
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit form');
+      }
+
+      // Store leadId if needed for future reference
+      if (result.leadId) {
+        console.log('Lead created with ID:', result.leadId);
       }
 
       router.push('/property-listed');
     } catch (error) {
       console.error('Error submitting form:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Something went wrong. Please try again.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Check if it's a rate limit error
+        if (errorMessage.includes('Too many requests')) {
+          errorMessage = 'Too many requests. Please wait a moment and try again.';
+        }
+        // Check if it's a reCAPTCHA error
+        else if (errorMessage.includes('reCAPTCHA')) {
+          errorMessage = 'Security verification failed. Please refresh the page and try again.';
+        }
+        // Check if it's a network error
+        else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        }
+      }
+      
       setErrors(prev => ({
         ...prev,
-        submit: 'Something went wrong. Please try again.'
+        submit: errorMessage
       }));
-      trackEvent('form_submission_error', { error });
+      
+      trackEvent('form_submission_error', { 
+        error: errorMessage,
+        type: error instanceof Error ? error.name : 'Unknown'
+      });
     } finally {
       setLoading(false);
     }

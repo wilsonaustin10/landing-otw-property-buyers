@@ -8,8 +8,13 @@ interface GHLContactData {
   state?: string;
   postalCode?: string;
   source?: string;
-  customField?: Record<string, any>;
   tags?: string[];
+  companyName?: string;
+  // V2 API format for custom fields
+  customFields?: Array<{
+    id: string;
+    value: string;
+  }>;
 }
 
 interface GHLResponse {
@@ -31,10 +36,12 @@ export class GoHighLevelService {
   private enabled: boolean;
   private locationId: string;
   private authType: 'jwt' | 'apikey';
+  private searchEndpoint: string;
 
   constructor() {
     this.apiKey = process.env.GHL_API_KEY || '';
     this.endpoint = process.env.NEXT_PUBLIC_GHL_ENDPOINT || '';
+    this.searchEndpoint = this.endpoint.replace('/contacts/', '/contacts/search/duplicate');
     this.enabled = Boolean(this.apiKey && this.endpoint);
     
     // Determine auth type - prefer API key over JWT
@@ -79,6 +86,106 @@ export class GoHighLevelService {
     return this.enabled;
   }
 
+  async searchForDuplicate(phone?: string, email?: string): Promise<{ found: boolean; contactId?: string; error?: string }> {
+    if (!this.enabled || (!phone && !email)) {
+      return { found: false };
+    }
+
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Version': '2021-07-28',
+      };
+
+      // Search by phone first (more unique than email)
+      const searchParam = phone || email;
+      const searchUrl = `${this.searchEndpoint}?locationId=${this.locationId}&` + 
+                       (phone ? `phone=${encodeURIComponent(phone)}` : `email=${encodeURIComponent(email || '')}`);
+
+      console.log('[GHL] Searching for duplicate contact:', searchUrl);
+
+      const response = await fetch(searchUrl, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        // If search fails, we'll proceed with creation
+        console.log('[GHL] Duplicate search failed:', response.status);
+        return { found: false };
+      }
+
+      const data = await response.json();
+      if (data.contact && data.contact.id) {
+        console.log('[GHL] Found duplicate contact:', data.contact.id);
+        return { found: true, contactId: data.contact.id };
+      }
+
+      return { found: false };
+    } catch (error) {
+      console.error('[GHL] Error searching for duplicate:', error);
+      return { found: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  async updateContact(contactId: string, data: GHLContactData): Promise<{ success: boolean; data?: any; error?: string }> {
+    if (!this.enabled) {
+      return { success: false, error: 'Go High Level integration is not configured' };
+    }
+
+    try {
+      const updateBody: any = {};
+
+      // Only include fields that should be updated
+      if (data.firstName) updateBody.firstName = data.firstName;
+      if (data.lastName) updateBody.lastName = data.lastName;
+      if (data.email) updateBody.email = data.email;
+      if (data.phone) updateBody.phone = data.phone;
+      if (data.address1) updateBody.address1 = data.address1;
+      if (data.city) updateBody.city = data.city;
+      if (data.state) updateBody.state = data.state;
+      if (data.postalCode) updateBody.postalCode = data.postalCode;
+      if (data.companyName) updateBody.companyName = data.companyName;
+      
+      // For updates, we append tags instead of replacing
+      if (data.tags && data.tags.length > 0) {
+        updateBody.tags = data.tags;
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Version': '2021-07-28',
+      };
+
+      const updateUrl = `${this.endpoint}${contactId}`;
+      console.log('[GHL] Updating contact:', contactId);
+
+      const response = await fetch(updateUrl, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(updateBody),
+      });
+
+      const responseText = await response.text();
+      
+      if (!response.ok) {
+        console.error('[GHL] Update failed:', response.status, responseText);
+        return { success: false, error: `Update failed: ${response.status}` };
+      }
+
+      const responseData = JSON.parse(responseText);
+      console.log('[GHL] Contact updated successfully');
+      return { success: true, data: responseData };
+    } catch (error) {
+      console.error('[GHL] Update error:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
   async sendContact(data: GHLContactData): Promise<{ success: boolean; data?: GHLResponse; error?: string }> {
     if (!this.enabled) {
       console.error('[GHL] Integration not enabled - missing API key or endpoint');
@@ -88,9 +195,10 @@ export class GoHighLevelService {
     const startTime = Date.now();
     
     try {
-      // Format body according to GHL v1 API requirements
+      // Format body according to GHL v2 API requirements
       const requestBody: any = {
         source: data.source || 'Website Form',
+        locationId: this.locationId, // Required for V2 API
       };
       
       // Only add fields if they have values (not empty strings)
@@ -105,10 +213,11 @@ export class GoHighLevelService {
       if (data.state) requestBody.state = data.state;
       if (data.postalCode) requestBody.postalCode = data.postalCode;
       if (data.tags && data.tags.length > 0) requestBody.tags = data.tags;
+      if (data.companyName) requestBody.companyName = data.companyName;
       
-      // Add custom fields
-      if (data.customField && Object.keys(data.customField).length > 0) {
-        requestBody.customField = data.customField;
+      // Add custom fields in V2 API format
+      if (data.customFields && data.customFields.length > 0) {
+        requestBody.customFields = data.customFields;
       }
 
       console.log('[GHL] Sending contact request:', {
@@ -142,7 +251,12 @@ export class GoHighLevelService {
         'Authorization': `Bearer ${this.apiKey.substring(0, 20)}...`
       });
 
-      const response = await fetch(this.endpoint, {
+      // Use the base endpoint (locationId is now in the body)
+      const url = this.endpoint;
+
+      console.log('[GHL] Request URL:', url);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(requestBody),
@@ -178,6 +292,30 @@ export class GoHighLevelService {
           requestId: response.headers.get('x-request-id'),
           rateLimitRemaining: response.headers.get('x-ratelimit-remaining')
         });
+        
+        // Check if it's a duplicate contact error
+        if (response.status === 400 && responseData.message && 
+            typeof responseData.message === 'string' && 
+            responseData.message.includes('duplicated contacts')) {
+          console.log('[GHL] Duplicate contact detected, attempting to update instead');
+          
+          // Extract contact ID if provided in the error response
+          const existingContactId = responseData.meta?.contactId;
+          
+          if (existingContactId) {
+            // Update the existing contact
+            const updateResult = await this.updateContact(existingContactId, data);
+            return updateResult;
+          } else {
+            // Search for the contact by phone/email
+            const searchResult = await this.searchForDuplicate(data.phone, data.email);
+            
+            if (searchResult.found && searchResult.contactId) {
+              const updateResult = await this.updateContact(searchResult.contactId, data);
+              return updateResult;
+            }
+          }
+        }
         
         // Enhanced error messages based on status code
         if (response.status === 401) {
@@ -316,34 +454,51 @@ export class GoHighLevelService {
       email = undefined;
     }
     
+    // Create specific tags for property details
+    const propertyTags = [];
+    
+    // Add property condition as tag
+    if (formData.propertyCondition) {
+      propertyTags.push(`Condition: ${formData.propertyCondition}`);
+    }
+    
+    // Add timeline as tag
+    if (formData.timeframe) {
+      propertyTags.push(`Timeline: ${formData.timeframe}`);
+    }
+    
+    // Add price range as tag
+    if (formData.price) {
+      const price = parseInt(formData.price);
+      if (price < 100000) propertyTags.push('Price: Under 100k');
+      else if (price < 200000) propertyTags.push('Price: 100k-200k');
+      else if (price < 300000) propertyTags.push('Price: 200k-300k');
+      else if (price < 500000) propertyTags.push('Price: 300k-500k');
+      else propertyTags.push('Price: Over 500k');
+    }
+    
+    // Add listing status as tag
+    if (formData.isPropertyListed !== undefined) {
+      propertyTags.push(formData.isPropertyListed ? 'Listed' : 'Not Listed');
+    }
+
     const ghlData: GHLContactData = {
       firstName: firstName,
       lastName: lastName,
       email: email,
       phone: formData.phone,
-      customField: {
-        propertyAddress: formData.address,
-        propertyCondition: formData.propertyCondition,
-        timeframe: formData.timeframe,
-        askingPrice: formData.price,
-        isPropertyListed: formData.isPropertyListed,
-        submissionType: formData.submissionType,
-        leadId: formData.leadId,
-        submissionTimestamp: new Date().toISOString(),
-        originalEmail: formData.email || 'Not provided' // Store original email if any
-      },
-      tags: ['Website Lead', 'PPC', formData.submissionType === 'partial' ? 'Partial Lead' : 'Complete Lead'],
+      tags: [
+        'Website Lead', 
+        'PPC', 
+        formData.submissionType === 'partial' ? 'Partial Lead' : 'Complete Lead',
+        ...propertyTags
+      ],
+      companyName: formData.address ? formData.address.split(',')[0] : undefined, // Use property address as company name
     };
     
     // Remove empty email field if it exists
     if (!email) {
       delete ghlData.email;
-    }
-    
-    // For complete submissions, update the submission type
-    if (!isPartial && formData.submissionType === 'complete') {
-      ghlData.customField!.submissionType = 'complete';
-      ghlData.tags = ['Website Lead', 'PPC', 'Complete Lead'];
     }
 
     // Parse address if available
@@ -360,13 +515,51 @@ export class GoHighLevelService {
       }
     }
 
+    // For complete submissions, add property details as a custom field
+    if (formData.submissionType === 'complete') {
+      const propertyDetails = [];
+      
+      // Build property details text
+      if (formData.address) {
+        propertyDetails.push(`Property Address: ${formData.address}`);
+      }
+      if (formData.propertyCondition) {
+        propertyDetails.push(`Condition: ${formData.propertyCondition}`);
+      }
+      if (formData.price) {
+        propertyDetails.push(`Price Range: $${parseInt(formData.price).toLocaleString()}`);
+      }
+      if (formData.timeframe) {
+        propertyDetails.push(`Timeline: ${formData.timeframe}`);
+      }
+      if (formData.isPropertyListed !== undefined) {
+        propertyDetails.push(`Listed by Realtor: ${formData.isPropertyListed ? 'Yes' : 'No'}`);
+      }
+      
+      // Add submission metadata
+      propertyDetails.push(`\nSubmission Type: Complete Lead`);
+      propertyDetails.push(`Lead ID: ${formData.leadId}`);
+      propertyDetails.push(`Submitted: ${new Date(formData.timestamp || Date.now()).toLocaleString()}`);
+      
+      // Add as custom field
+      if (propertyDetails.length > 0) {
+        ghlData.customFields = [
+          {
+            id: 'TKDwVqfT1bsit3sCU5iX', // Property Details field ID
+            value: propertyDetails.join('\n')
+          }
+        ];
+      }
+    }
+
     console.log('[GHL] Formatted data ready:', {
       hasFirstName: !!ghlData.firstName,
       hasLastName: !!ghlData.lastName,
       hasEmail: !!ghlData.email,
       hasPhone: !!ghlData.phone,
       hasAddress: !!ghlData.address1,
-      tagsCount: ghlData.tags?.length || 0
+      tagsCount: ghlData.tags?.length || 0,
+      hasCustomFields: !!ghlData.customFields
     });
 
     return ghlData;

@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { LeadFormData } from '@/types';
 import { rateLimit } from '@/utils/rateLimit';
 import { goHighLevel } from '@/utils/goHighLevelV2';
+import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
 
 // Validate partial form data (only address and phone)
 function validatePartialData(data: Partial<LeadFormData>): boolean {
@@ -68,6 +69,21 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Verify phone number with Numverify
+    const phoneVerification = await verifyPhoneNumberWithCache(data.phone);
+    if (!phoneVerification.isValid) {
+      console.error('Phone verification failed:', phoneVerification.error);
+      return NextResponse.json(
+        { error: phoneVerification.error || 'Invalid phone number' },
+        { status: 400 }
+      );
+    }
+    console.log('Phone verified successfully:', {
+      number: phoneVerification.phoneNumber,
+      lineType: phoneVerification.lineType,
+      carrier: phoneVerification.carrier
+    });
 
     // Prepare data with timestamp and tracking
     const leadData: Partial<LeadFormData> = {

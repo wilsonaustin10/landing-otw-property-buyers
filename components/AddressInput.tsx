@@ -30,23 +30,45 @@ export default function AddressInput({
 
   // Handle Google Places selection - memoized to prevent re-initialization
   const handleAddressSelect = useCallback(async (addressData: AddressData) => {
+    console.log('AddressInput received:', addressData);
     setIsProcessing(true);
+    setLocalError(''); // Clear any previous errors
     
     try {
-      // Ensure all required fields are present
-      if (!addressData.streetNumber || !addressData.street || !addressData.city || 
-          !addressData.state || !addressData.postalCode || !addressData.placeId) {
-        throw new Error('Incomplete address selected. Please select a full address.');
+      // Check for minimum required fields (city and state)
+      if (!addressData.city || !addressData.state) {
+        console.error('Missing required fields:', { 
+          city: addressData.city, 
+          state: addressData.state,
+          fullData: addressData 
+        });
+        // If city or state is missing, it's likely not a valid residential address
+        throw new Error('Please select a complete address with city and state.');
       }
 
-      // Update form data with all address components
+      // Build address components with available data
+      const streetAddress = addressData.streetNumber && addressData.street 
+        ? `${addressData.streetNumber} ${addressData.street}`.trim()
+        : addressData.street || '';
+
+      // Warn if some components are missing but don't block submission
+      const missingComponents = [];
+      if (!addressData.streetNumber) missingComponents.push('street number');
+      if (!addressData.street) missingComponents.push('street name');
+      if (!addressData.postalCode) missingComponents.push('ZIP code');
+
+      if (missingComponents.length > 0) {
+        console.warn(`Address is missing: ${missingComponents.join(', ')}. User may need to verify.`);
+      }
+
+      // Update form data with available address components
       const addressUpdate = {
         address: addressData.formattedAddress,
-        streetAddress: `${addressData.streetNumber} ${addressData.street}`.trim(),
+        streetAddress: streetAddress,
         city: addressData.city,
         state: addressData.state,
-        postalCode: addressData.postalCode,
-        placeId: addressData.placeId
+        postalCode: addressData.postalCode || '',
+        placeId: addressData.placeId || ''
       };
       
       setSelectedAddress(addressData);
@@ -106,10 +128,23 @@ export default function AddressInput({
 
       {selectedAddress && !error && !readOnly && (
         <div className="flex flex-col space-y-2">
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">
+          <div className={`p-3 rounded-lg ${
+            (!selectedAddress.streetNumber || !selectedAddress.street || !selectedAddress.postalCode)
+              ? 'bg-yellow-50 border border-yellow-200'
+              : 'bg-green-50 border border-green-200'
+          }`}>
+            <p className={`text-sm ${
+              (!selectedAddress.streetNumber || !selectedAddress.street || !selectedAddress.postalCode)
+                ? 'text-yellow-800'
+                : 'text-green-800'
+            }`}>
               Selected: {selectedAddress.formattedAddress}
             </p>
+            {(!selectedAddress.streetNumber || !selectedAddress.street || !selectedAddress.postalCode) && (
+              <p className="text-xs text-yellow-700 mt-1">
+                Note: Some address details may be missing. Please verify the address is correct.
+              </p>
+            )}
           </div>
         </div>
       )}

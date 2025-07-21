@@ -12,11 +12,10 @@ function validateFormData(data: Partial<LeadFormData>): data is LeadFormData {
     throw new Error('Invalid data format');
   }
 
-  // Required fields validation
+  // Required fields validation (leadId is optional, will be generated if missing)
   const requiredFields: (keyof LeadFormData)[] = [
     'address', 'phone', 'firstName', 'lastName', 
-    'email', 'propertyCondition', 'timeframe', 'price',
-    'leadId'
+    'email', 'propertyCondition', 'timeframe', 'price'
   ];
   
   for (const field of requiredFields) {
@@ -113,8 +112,12 @@ export async function POST(request: Request) {
     });
 
     // 3. Prepare data with tracking information
+    // Generate leadId if not provided (for cases where partial submission was skipped)
+    const leadId = data.leadId || `lead_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     const formData: LeadFormData = {
       ...data,
+      leadId: leadId,
       timestamp: data.timestamp || timestamp,
       lastUpdated: timestamp,
       submissionType: 'complete' // Mark this as a complete submission
@@ -146,7 +149,7 @@ export async function POST(request: Request) {
         console.log('[API] Successfully sent to Go High Level');
         return NextResponse.json({ 
           success: true,
-          leadId: data.leadId
+          leadId: leadId
         });
       } else {
         console.error('[API] Failed to send to Go High Level:', ghlResult.error);

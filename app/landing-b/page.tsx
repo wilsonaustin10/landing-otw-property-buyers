@@ -12,6 +12,7 @@ export default function LandingBPage() {
   const router = useRouter();
   const { formState, updateFormData } = useForm();
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [localFullName, setLocalFullName] = useState(
     formState.firstName || formState.lastName ? `${formState.firstName || ''} ${formState.lastName || ''}`.trim() : ''
   );
@@ -91,16 +92,92 @@ export default function LandingBPage() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     syncGlobalNameFromLocal();
-    if (validateFirstStep()) {
+    if (!validateFirstStep()) {
+      return;
+    }
+
+    setLocalErrors({});
+    setIsSubmitting(true);
+    
+    try {
+      // Submit partial data to API for phone verification
+      const response = await fetch('/api/submit-partial', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          address: formState.address,
+          phone: formState.phone,
+          consent: formState.consent,
+        }),
+      });
+
+      let result;
+      try {
+        const text = await response.text();
+        result = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        console.error('Error parsing API response:', parseError);
+        throw new Error(`Failed to parse API response: ${response.status} ${response.statusText}`);
+      }
+      
+      if (!response.ok) {
+        // Extract error message from API response
+        const errorMessage = result.error || `API error: ${response.status} ${response.statusText}`;
+        console.error('API error response:', errorMessage);
+        
+        // Check if it's a phone validation error
+        if (errorMessage.toLowerCase().includes('phone') || errorMessage.toLowerCase().includes('invalid number')) {
+          setLocalErrors(prev => ({
+            ...prev,
+            phone: errorMessage
+          }));
+          return;
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to verify contact information');
+      }
+
+      // Store leadId if provided
+      if (result.leadId) {
+        updateFormData({ leadId: result.leadId });
+      }
+
       trackEvent('step1_next', {
         hasAddress: !!formState.address,
         hasFullName: !!(formState.firstName || formState.lastName),
         hasPhone: !!formState.phone,
         hasEmail: !!formState.email,
       });
+      
       router.push('/landing-b/step-2');
+    } catch (error) {
+      console.error('Form submission error:', error);
+      
+      let errorMessage = 'Something went wrong. Please try again.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Check if it's a rate limit error
+        if (errorMessage.includes('Too many requests')) {
+          errorMessage = 'Too many requests. Please wait a moment and try again.';
+        }
+      }
+      
+      setLocalErrors(prev => ({
+        ...prev,
+        submit: errorMessage
+      }));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -244,13 +321,29 @@ export default function LandingBPage() {
               </div>
             </div>
 
+            {localErrors.submit && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-800">{localErrors.submit}</p>
+              </div>
+            )}
+
             <div>
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+                disabled={isSubmitting}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent ${
+                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
-                Get Your Cash Offer
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                    Verifying...
+                  </>
+                ) : (
+                  'Get Your Cash Offer'
+                )}
               </button>
             </div>
           </form>

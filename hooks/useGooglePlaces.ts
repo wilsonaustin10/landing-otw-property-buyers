@@ -110,6 +110,14 @@ export function useGooglePlaces(
             callNumber: apiCallCountRef.current
           });
 
+          // Debug logging
+          console.log('Google Places returned:', {
+            formatted_address: place.formatted_address,
+            place_id: place.place_id,
+            address_components: place.address_components,
+            types: place.types
+          });
+
           const addressData: AddressData = {
             formattedAddress: place.formatted_address,
             placeId: place.place_id
@@ -117,15 +125,35 @@ export function useGooglePlaces(
 
           // Parse address components
           place.address_components?.forEach(component => {
-            const type = component.types[0];
-            switch (type) {
-              case 'street_number': addressData.streetNumber = component.long_name; break;
-              case 'route': addressData.street = component.long_name; break;
-              case 'locality': addressData.city = component.long_name; break;
-              case 'administrative_area_level_1': addressData.state = component.short_name; break;
-              case 'postal_code': addressData.postalCode = component.long_name; break;
+            console.log('Processing component:', {
+              types: component.types,
+              long_name: component.long_name,
+              short_name: component.short_name
+            });
+
+            // Check all types, not just the first one
+            const types = component.types;
+            
+            if (types.includes('street_number')) {
+              addressData.streetNumber = component.long_name;
+            } else if (types.includes('route')) {
+              addressData.street = component.long_name;
+            } else if (types.includes('locality')) {
+              addressData.city = component.long_name;
+            } else if (types.includes('sublocality') && !addressData.city) {
+              // Fall back to sublocality if locality is not available
+              addressData.city = component.long_name;
+            } else if (types.includes('administrative_area_level_2') && !addressData.city) {
+              // Sometimes county is used when city is not available
+              addressData.city = component.long_name;
+            } else if (types.includes('administrative_area_level_1')) {
+              addressData.state = component.short_name;
+            } else if (types.includes('postal_code')) {
+              addressData.postalCode = component.long_name;
             }
           });
+
+          console.log('Parsed address data:', addressData);
 
           // Cache the result
           if (place.place_id) {
