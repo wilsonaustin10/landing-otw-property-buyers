@@ -142,8 +142,8 @@ export default function TermsOfService() {
                   
                 </a>
                 <br />
-                <a href="tel:" className="text-primary hover:underline">
-                  
+                <a href="tel:(505)560-3532" className="text-primary hover:underline">
+                  (505)560-3532
                 </a>
               </p>
             </section>

@@ -24,11 +24,11 @@ export default function Footer() {
             </p>
             <div className="space-y-2">
               <a 
-                href="tel: "
+                href="tel:(505)560-3532"
                 className="flex items-center space-x-2 text-footer-text/80 hover:text-footer-hover transition-colors"
               >
                 <Phone className="h-4 w-4" />
-                <span></span>
+                <span>(505)560-3532</span>
               </a>
               <a 
                 href="mailto:"
