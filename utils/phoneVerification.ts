@@ -23,13 +23,9 @@ interface PhoneVerificationResult {
 export async function verifyPhoneNumber(phoneNumber: string): Promise<PhoneVerificationResult> {
   const apiKey = process.env.NUMVERIFY_API_KEY;
   
+  
   if (!apiKey) {
     console.error('NUMVERIFY_API_KEY not configured');
-    // In development, we might want to bypass phone verification
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Skipping phone verification in development');
-      return { isValid: true, phoneNumber };
-    }
     return { isValid: false, error: 'Phone verification not configured' };
   }
 
@@ -37,8 +33,8 @@ export async function verifyPhoneNumber(phoneNumber: string): Promise<PhoneVerif
     // Clean the phone number - remove formatting
     const cleanNumber = phoneNumber.replace(/\D/g, '');
     
-    // Numverify API endpoint
-    const url = `http://apilayer.net/api/validate?access_key=${apiKey}&number=${cleanNumber}&country_code=US&format=1`;
+    // Numverify API endpoint (using HTTPS for security)
+    const url = `https://apilayer.net/api/validate?access_key=${apiKey}&number=${cleanNumber}&country_code=US&format=1`;
     
     const response = await fetch(url);
     
@@ -67,12 +63,31 @@ export async function verifyPhoneNumber(phoneNumber: string): Promise<PhoneVerif
     const acceptableLineTypes = ['mobile', 'fixed_line', 'fixed_line_or_mobile'];
     const isAcceptableType = acceptableLineTypes.includes(data.line_type?.toLowerCase() || '');
     
+    // Check for common fake number patterns
+    const fakePatterns = [
+      /^(\d)\1{9}$/, // All same digits (e.g., 1111111111)
+      /^123456789\d?$/, // Sequential digits
+      /^555555\d{4}$/, // 555-555-xxxx pattern (commonly used in movies/TV)
+      /^000\d{7}$/, // Starting with 000
+    ];
+    
+    const isFakePattern = fakePatterns.some(pattern => pattern.test(cleanNumber));
+    
     if (!data.valid) {
       return { isValid: false, error: 'Invalid phone number' };
     }
     
+    if (isFakePattern) {
+      return { isValid: false, error: 'Please enter a real phone number' };
+    }
+    
     if (!isAcceptableType) {
       return { isValid: false, error: 'Please use a valid mobile or landline number' };
+    }
+    
+    // Additional checks for suspicious patterns
+    if (data.line_type === 'voip' || data.line_type === 'toll_free') {
+      return { isValid: false, error: 'Please use a personal mobile or landline number' };
     }
     
     return {
