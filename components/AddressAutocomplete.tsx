@@ -15,7 +15,6 @@ interface AddressAutocompleteProps {
 
 declare global {
   interface Window {
-    google: any;
     initAutocomplete?: () => void;
   }
 }
