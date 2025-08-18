@@ -98,13 +98,13 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
 
   const handleNext = useCallback(() => {
     if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev: number) => prev + 1);
     }
   }, [currentStep, totalSteps]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev: number) => prev - 1);
     }
   }, [currentStep]);
 
