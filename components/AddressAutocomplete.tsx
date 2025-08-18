@@ -1,0 +1,181 @@
+'use client';
+
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Home } from 'lucide-react';
+
+interface AddressAutocompleteProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  autoFocus?: boolean;
+  error?: string;
+  onBlur?: () => void;
+}
+
+declare global {
+  interface Window {
+    google: any;
+    initAutocomplete?: () => void;
+  }
+}
+
+export default function AddressAutocomplete({
+  value,
+  onChange,
+  placeholder = "Enter your property address",
+  className = "",
+  autoFocus = false,
+  error,
+  onBlur
+}: AddressAutocompleteProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const initializeAutocomplete = useCallback(() => {
+    if (!inputRef.current) {
+      console.log('AddressAutocomplete: Input ref not ready');
+      return;
+    }
+    
+    if (!window.google?.maps?.places) {
+      console.log('AddressAutocomplete: Google Maps Places API not loaded');
+      return;
+    }
+
+    console.log('AddressAutocomplete: Initializing autocomplete');
+
+    // Destroy previous instance if it exists
+    if (autocompleteRef.current) {
+      window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+    }
+
+    try {
+      // Create new autocomplete instance
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+        inputRef.current,
+        {
+          types: ['address'],
+          componentRestrictions: { country: 'us' },
+          fields: ['formatted_address', 'address_components', 'geometry']
+        }
+      );
+
+      console.log('AddressAutocomplete: Autocomplete instance created successfully');
+
+      // Handle place selection
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current.getPlace();
+        console.log('AddressAutocomplete: Place selected', place);
+        
+        if (place?.formatted_address) {
+          onChange(place.formatted_address);
+        } else if (place?.name) {
+          onChange(place.name);
+        }
+      });
+    } catch (error) {
+      console.error('AddressAutocomplete: Error creating autocomplete instance', error);
+    }
+  }, [onChange]);
+
+  useEffect(() => {
+    // Check if Google Maps is already loaded
+    if (window.google?.maps?.places) {
+      setIsLoaded(true);
+      initializeAutocomplete();
+      return;
+    }
+
+    // Listen for the custom event that indicates Google Maps is ready
+    const handleGoogleMapsReady = () => {
+      setIsLoaded(true);
+      initializeAutocomplete();
+    };
+
+    window.addEventListener('google-maps-ready', handleGoogleMapsReady);
+
+    // Also set up a polling check as a fallback
+    const checkGoogleMaps = setInterval(() => {
+      if (window.google?.maps?.places) {
+        clearInterval(checkGoogleMaps);
+        setIsLoaded(true);
+        initializeAutocomplete();
+      }
+    }, 100);
+
+    // Clean up interval after 10 seconds if Google Maps hasn't loaded
+    const timeout = setTimeout(() => {
+      clearInterval(checkGoogleMaps);
+      console.warn('Google Maps API failed to load after 10 seconds');
+    }, 10000);
+
+    return () => {
+      window.removeEventListener('google-maps-ready', handleGoogleMapsReady);
+      clearInterval(checkGoogleMaps);
+      clearTimeout(timeout);
+      if (autocompleteRef.current && window.google?.maps?.event) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
+  }, [initializeAutocomplete]);
+
+  // Reinitialize when Google Maps loads
+  useEffect(() => {
+    if (isLoaded) {
+      initializeAutocomplete();
+    }
+  }, [isLoaded, initializeAutocomplete]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+
+  // Prevent form submission on Enter key when selecting from dropdown
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      // Check if the autocomplete dropdown is open
+      const pacContainer = document.querySelector('.pac-container');
+      if (pacContainer && (pacContainer as HTMLElement).style.display !== 'none') {
+        e.preventDefault();
+      }
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <Home className="inline w-4 h-4 mr-1" />
+        What's the property address?
+      </label>
+      <input
+        ref={inputRef}
+        type="text"
+        id="address"
+        name="address"
+        value={value}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        className={className}
+        autoFocus={autoFocus}
+        autoComplete="off"
+        aria-label="Property address"
+        aria-required="true"
+        aria-invalid={!!error}
+        aria-describedby={error ? 'address-error' : 'address-hint'}
+      />
+      {error ? (
+        <p id="address-error" className="text-xs text-red-500 mt-1" role="alert">
+          {error}
+        </p>
+      ) : (
+        <p id="address-hint" className="text-xs text-gray-500 mt-1">
+          We buy houses anywhere in the area
+        </p>
+      )}
+    </div>
+  );
+}
