@@ -37,6 +37,11 @@ export default function RootLayout({
                 'page_path': window.location.pathname,
               });
               
+              // Google Tag Manager
+              gtag('config', 'GT-5R7D6GDF', {
+                'page_path': window.location.pathname,
+              });
+              
               // Google Analytics (if you have a GA4 property)
               ${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? `gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}');` : ''}
             `,
