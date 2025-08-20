@@ -20,9 +20,12 @@ function OfferPageContent() {
   const [isSticky, setIsSticky] = useState(false);
   
   // Dynamic location based on URL parameters with fallbacks
-  const city = searchParams.get('city') || searchParams.get('utm_city') || 'St. Louis';
-  const state = searchParams.get('state') || searchParams.get('utm_state') || 'MO';
-  const metro = searchParams.get('metro') || searchParams.get('utm_metro') || `${city}`;
+  const city = searchParams.get('city') || searchParams.get('utm_city') || searchParams.get('fb_city') || '';
+  const state = searchParams.get('state') || searchParams.get('utm_state') || searchParams.get('fb_state') || '';
+  const metro = searchParams.get('metro') || searchParams.get('utm_metro') || searchParams.get('fb_metro') || city;
+  
+  // Check if we have location data or should use nationwide messaging
+  const hasLocation = city && state;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,7 +52,7 @@ function OfferPageContent() {
 
   const faqs = [
     {
-      question: `How fast can you close on my ${city} property?`,
+      question: `How fast can you close on my ${hasLocation ? `${city} ` : ''}property?`,
       answer: 'We can typically close in as little as 7-14 days, depending on your timeline. If you need more time, we\'re flexible and can work with your schedule.'
     },
     {
@@ -65,15 +68,17 @@ function OfferPageContent() {
       answer: 'We evaluate comparable sales in your area, the property condition, and current market conditions to make a fair, competitive cash offer.'
     },
     {
-      question: `What areas of ${city} do you serve?`,
-      answer: `We buy houses throughout the entire ${metro} metroplex, including all surrounding suburbs and neighborhoods.`
+      question: hasLocation ? `What areas of ${city} do you serve?` : 'What areas do you serve?',
+      answer: hasLocation 
+        ? `We buy houses throughout the entire ${metro} metroplex, including all surrounding suburbs and neighborhoods.`
+        : 'We buy houses nationwide! We have local partners in all 50 states who can help you sell your property quickly.'
     }
   ];
 
   const testimonials = [
     {
       name: 'Sarah M.',
-      location: `${city}, ${state}`,
+      location: hasLocation ? `${city}, ${state}` : 'Dallas, TX',
       rating: 5,
       text: 'Sold my inherited property in just 10 days. No repairs, no hassle, and they handled everything professionally.',
       timeAgo: '1 week ago',
@@ -137,11 +142,14 @@ function OfferPageContent() {
           "image": "/OTW TP.png",
           "url": typeof window !== 'undefined' ? window.location.origin : 'https://otwpropertybuyers.com',
           "telephone": phoneNumber,
-          "areaServed": `${metro} Metroplex`,
-          "address": {
+          "areaServed": hasLocation ? `${metro} Metroplex` : "United States",
+          "address": hasLocation ? {
             "@type": "PostalAddress",
             "addressLocality": city,
             "addressRegion": state,
+            "addressCountry": "US"
+          } : {
+            "@type": "PostalAddress",
             "addressCountry": "US"
           },
           "aggregateRating": {
@@ -169,7 +177,7 @@ function OfferPageContent() {
                 />
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-                Sell Your House for Cash in {city}
+                Sell Your House for Cash {hasLocation ? `in ${city}` : 'Fast'}
               </h1>
               <p className="text-lg sm:text-xl mb-8 text-white/90">
                 Get a fair cash offer in 24 hours. No repairs needed, no fees, and we can close in as little as 7 days.
@@ -180,7 +188,7 @@ function OfferPageContent() {
                 <div className="flex justify-center md:justify-start">
                   <div className="flex items-center bg-white/10 backdrop-blur rounded-lg px-4 py-2">
                     <Shield className="w-5 h-5 mr-2 text-highlight" />
-                    <span className="text-sm">Local {city} Company</span>
+                    <span className="text-sm">{hasLocation ? `Local ${city} Company` : 'Nationwide Cash Buyer'}</span>
                   </div>
                 </div>
               </div>
@@ -384,14 +392,19 @@ function OfferPageContent() {
       {/* Local Credibility */}
       <section className="py-12 sm:py-16 px-4" aria-label="Local presence">
         <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-8">We Buy Houses in {city} Neighborhoods</h2>
+          <h2 className="text-3xl font-bold mb-8">
+            {hasLocation ? `We Buy Houses in ${city} Neighborhoods` : 'We Buy Houses Nationwide'}
+          </h2>
           <p className="text-lg text-gray-600 mb-8">
-            Serving the entire {metro} metroplex including Downtown {city}, Uptown, Oak Lawn, 
-            Highland Park, Preston Hollow, Lake Highlands, and all surrounding areas.
+            {hasLocation 
+              ? `Serving the entire ${metro} metroplex including Downtown ${city}, Uptown, Oak Lawn, Highland Park, Preston Hollow, Lake Highlands, and all surrounding areas.`
+              : 'We have local partners across all 50 states ready to make you a fair cash offer. No matter where your property is located, we can help you sell fast.'}
           </p>
           <div className="flex items-center justify-center text-secondary">
             <MapPin className="w-6 h-6 mr-2" />
-            <span className="font-semibold">Local {city} Company Since 2015</span>
+            <span className="font-semibold">
+              {hasLocation ? `Local ${city} Company Since 2015` : 'Nationwide Network Since 2015'}
+            </span>
           </div>
         </div>
       </section>
@@ -430,7 +443,9 @@ function OfferPageContent() {
       {/* Secondary CTA */}
       <section className="py-12 sm:py-16 px-4 bg-accent text-white" aria-label="Call to action">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Sell Your {city} House?</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Ready to Sell Your {hasLocation ? `${city} ` : ''}House?
+          </h2>
           <p className="text-lg sm:text-xl mb-8">Get your no-obligation cash offer today. It only takes 2 minutes.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
