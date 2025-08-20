@@ -189,6 +189,8 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
         })
       });
 
+      console.log('Form submission response status:', response.status);
+      
       if (response.ok) {
         // Track conversion if gtag is available
         if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -204,12 +206,13 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
         }
         router.push('/thank-you');
       } else {
-        console.error('Form submission failed');
-        alert('There was an error submitting your form. Please try again or call us directly.');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Form submission failed:', response.status, errorData);
+        alert(`There was an error submitting your form (Error ${response.status}). Please try again or call us directly at (505) 560-3532.`);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('There was an error submitting your form. Please try again or call us directly.');
+      alert('There was an error submitting your form. Please try again or call us directly at (505) 560-3532.');
     } finally {
       setIsSubmitting(false);
     }
