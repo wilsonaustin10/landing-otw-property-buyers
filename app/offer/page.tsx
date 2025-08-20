@@ -38,9 +38,21 @@ function OfferPageContent() {
   }, []);
 
 
-  const handlePhoneClick = () => {
+  const handlePhoneClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const phoneUrl = `tel:${phoneNumber.replace(/[^\d]/g, '')}`;
+    
+    // Track with dataLayer
     if (window.dataLayer) {
       window.dataLayer.push({ event: 'cta_click', type: 'phone' });
+    }
+    
+    // Track phone call conversion
+    if (typeof window !== 'undefined' && (window as any).gtag_report_conversion) {
+      (window as any).gtag_report_conversion(phoneUrl);
+    } else {
+      // Fallback if conversion tracking isn't loaded
+      window.location.href = phoneUrl;
     }
   };
 

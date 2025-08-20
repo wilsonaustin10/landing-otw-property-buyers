@@ -44,6 +44,22 @@ export default function RootLayout({
               
               // Google Analytics (if you have a GA4 property)
               ${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ? `gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}');` : ''}
+              
+              // Phone call conversion tracking function
+              window.gtag_report_conversion = function(url) {
+                var callback = function () {
+                  if (typeof(url) != 'undefined') {
+                    window.location = url;
+                  }
+                };
+                gtag('event', 'conversion', {
+                  'send_to': 'AW-17359126152/ySOKCIbjj4obEIj9vNVA',
+                  'value': 1.0,
+                  'currency': 'USD',
+                  'event_callback': callback
+                });
+                return false;
+              }
             `,
           }}
         />
