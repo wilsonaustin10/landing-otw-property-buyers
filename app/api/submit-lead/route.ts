@@ -134,7 +134,8 @@ export async function POST(request: Request) {
       timestamp,
       lastUpdated: timestamp,
       submissionType: 'complete',
-      referralSource: data.source || 'offer-page'
+      referralSource: data.source || 'offer-page',
+      consent: true // User implicitly consents by submitting the form
     };
 
     console.log('[submit-lead] Prepared lead data:', {
