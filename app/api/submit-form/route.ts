@@ -5,6 +5,7 @@ import { rateLimit } from '@/utils/rateLimit';
 import { goHighLevel } from '@/utils/goHighLevelV2';
 import { verifyRecaptchaToken } from '@/utils/recaptcha';
 import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
+import { googleSheetsClient, initializeGoogleSheets } from '@/utils/googleSheets';
 
 // Validate complete form data
 function validateFormData(data: Partial<LeadFormData>): data is LeadFormData {
@@ -134,7 +135,29 @@ export async function POST(request: Request) {
       nodeEnv: process.env.NODE_ENV
     });
 
-    // 4. Send to Go High Level
+    // 4. Send to Google Sheets (non-blocking)
+    try {
+      await initializeGoogleSheets();
+      if (formData.leadId) {
+        const googleSheetsSuccess = await googleSheetsClient.updatePropertyLead(formData.leadId, formData);
+        if (!googleSheetsSuccess) {
+          console.log('Failed to update lead in Google Sheets (non-critical)');
+        } else {
+          console.log('Successfully updated lead in Google Sheets');
+        }
+      } else {
+        const googleSheetsSuccess = await googleSheetsClient.appendPropertyLead(formData);
+        if (!googleSheetsSuccess) {
+          console.log('Failed to append lead to Google Sheets (non-critical)');
+        } else {
+          console.log('Successfully appended lead to Google Sheets');
+        }
+      }
+    } catch (error) {
+      console.error('Error sending to Google Sheets:', error);
+    }
+
+    // 5. Send to Go High Level
     if (!goHighLevel.isEnabled()) {
       throw new Error('Go High Level integration is not configured. Please check environment variables.');
     }

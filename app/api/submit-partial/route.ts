@@ -4,6 +4,7 @@ import { LeadFormData } from '@/types';
 import { rateLimit } from '@/utils/rateLimit';
 import { goHighLevel } from '@/utils/goHighLevelV2';
 import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
+import { googleSheetsClient, initializeGoogleSheets } from '@/utils/googleSheets';
 
 // Validate partial form data (only address and phone)
 function validatePartialData(data: Partial<LeadFormData>): boolean {
@@ -107,6 +108,19 @@ export async function POST(request: Request) {
       ghlEndpoint: process.env.NEXT_PUBLIC_GHL_ENDPOINT,
       ghlEnabled: goHighLevel.isEnabled()
     });
+
+    // Send to Google Sheets first (non-blocking)
+    try {
+      await initializeGoogleSheets();
+      const googleSheetsSuccess = await googleSheetsClient.appendPropertyLead(leadData as LeadFormData);
+      if (!googleSheetsSuccess) {
+        console.log('Failed to send partial lead to Google Sheets (non-critical)');
+      } else {
+        console.log('Successfully sent partial lead to Google Sheets');
+      }
+    } catch (error) {
+      console.error('Error sending partial lead to Google Sheets:', error);
+    }
 
     // Send to Go High Level
     if (!goHighLevel.isEnabled()) {
