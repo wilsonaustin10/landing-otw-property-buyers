@@ -45,32 +45,21 @@ export class GoHighLevelService {
     this.searchEndpoint = 'https://services.leadconnectorhq.com/contacts/search/duplicate';
     this.enabled = Boolean(this.apiKey);
     
-    // Determine auth type - prefer API key over JWT
-    this.authType = this.apiKey.startsWith('eyJ') ? 'jwt' : 'apikey';
+    // Force API key authentication - JWT is deprecated and unreliable
+    // Even if the key looks like a JWT, treat it as an API key
+    this.authType = 'apikey';
     
-    // Extract location ID
-    this.locationId = '';
-    if (this.apiKey && this.authType === 'jwt') {
-      try {
-        const tokenParts = this.apiKey.split('.');
-        if (tokenParts.length === 3) {
-          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-          this.locationId = payload.location_id || '';
-          console.log('[GHL] Extracted location ID from JWT:', this.locationId);
-          
-          // Check for millisecond timestamps
-          if (payload.iat && payload.iat > 1000000000000) {
-            console.warn('[GHL] WARNING: JWT token has millisecond timestamps. This is a known GHL issue.');
-            console.warn('[GHL] Token iat:', new Date(payload.iat).toISOString());
-          }
-        }
-      } catch (error) {
-        console.error('[GHL] Failed to extract location ID from JWT:', error);
-      }
-    } else if (this.authType === 'apikey') {
-      // For API key auth, use location ID from env or extract from the key itself
-      this.locationId = process.env.GHL_LOCATION_ID || 'ecoPNd0lv0NmCRDLDZHt'; // Using the ID from your logs
-      console.log('[GHL] Using location ID for API key auth:', this.locationId);
+    // Use the location ID from environment or the one from the error logs
+    // The error shows contactId: 'OSaY2E1uqng3mCYgykAv' with location 'ecoPNd0lv0NmCRDLDZHt'
+    this.locationId = process.env.GHL_LOCATION_ID || 'ecoPNd0lv0NmCRDLDZHt';
+    
+    // Log warning if the API key looks like a JWT
+    if (this.apiKey && this.apiKey.startsWith('eyJ')) {
+      console.warn('[GHL] WARNING: Your API key looks like a JWT token.');
+      console.warn('[GHL] JWT authentication is deprecated and unreliable.');
+      console.warn('[GHL] Please obtain a proper API key from Go High Level.');
+      console.warn('[GHL] To get an API key: Settings > Business Profile > API Keys');
+      console.warn('[GHL] Attempting to use it as an API key anyway...');
     }
     
     console.log('[GHL] Service initialized:', {
@@ -264,15 +253,9 @@ export class GoHighLevelService {
         'Version': '2021-07-28', // Required for both v1 and v2
       };
       
-      if (this.authType === 'apikey') {
-        // For API key auth, use the key directly in Authorization header
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-        console.log('[GHL] Using API key authentication');
-      } else {
-        // For JWT auth
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-        console.log('[GHL] Using JWT authentication (not recommended)');
-      }
+      // Always use Bearer token authentication
+      headers['Authorization'] = `Bearer ${this.apiKey}`;
+      console.log('[GHL] Using API key authentication');
 
       console.log('[GHL] Request headers:', {
         ...headers,
@@ -358,21 +341,23 @@ export class GoHighLevelService {
         
         // Enhanced error messages based on status code
         if (response.status === 401) {
-          if (this.authType === 'jwt') {
-            console.error('[GHL] JWT Authentication Failed');
-            console.error('[GHL] Common causes:');
-            console.error('  1. JWT has millisecond timestamps (known GHL issue)');
-            console.error('  2. JWT is expired');
-            console.error('  3. Wrong endpoint (should be services.leadconnectorhq.com)');
-            console.error('[GHL] Solution: Use API Key authentication instead');
-          } else {
-            console.error('[GHL] API Key Authentication Failed');
-            console.error('[GHL] Verify the API key is correct and has proper permissions');
+          console.error('[GHL] Authentication Failed');
+          console.error('[GHL] Please verify:');
+          console.error('  1. Your API key is valid and not expired');
+          console.error('  2. The API key has proper permissions for contacts');
+          console.error('  3. The location ID is correct:', this.locationId);
+          console.error('[GHL] To get a new API key:');
+          console.error('  Go to GHL > Settings > Business Profile > API Keys');
+          console.error('  Create a new key with Contacts permissions');
+          
+          if (this.apiKey.startsWith('eyJ')) {
+            console.error('[GHL] IMPORTANT: Your key looks like a JWT token.');
+            console.error('[GHL] JWT tokens are deprecated. Please use an API key instead.');
           }
           
           return {
             success: false,
-            error: `Authentication failed (${this.authType}): ${responseData.message || responseData.error || 'Invalid credentials'}`,
+            error: `Authentication failed: ${responseData.message || responseData.error || 'Invalid API key'}. Please check your GHL_API_KEY environment variable.`,
           };
         }
         

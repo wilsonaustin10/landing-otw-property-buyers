@@ -1,18 +1,23 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
+import { LeadFormData } from '@/types';
+import { rateLimit } from '@/utils/rateLimit';
+import { goHighLevel } from '@/utils/goHighLevelV2';
+import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
+import { googleSheetsClient, initializeGoogleSheets } from '@/utils/googleSheets';
 
-interface LeadData {
+interface OfferLeadData {
   address: string;
   phone: string;
   fullName: string;
   email: string;
   propertyCondition: string;
   timeline: string;
-  source: string;
-  timestamp: string;
+  source?: string;
+  timestamp?: string;
 }
 
-function validateLeadData(data: any): data is LeadData {
+function validateLeadData(data: any): data is OfferLeadData {
   if (!data || typeof data !== 'object') {
     return false;
   }
@@ -43,23 +48,39 @@ function validateLeadData(data: any): data is LeadData {
   return true;
 }
 
+/**
+ * API Route for the /offer page lead submission
+ * This is a complete submission with all required information
+ */
 export async function POST(request: Request) {
+  const timestamp = new Date().toISOString();
+  const leadId = `lead_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  
   try {
     console.log('[submit-lead] Received request');
     
-    // Rate limiting by IP
+    // Apply rate limiting
     const headersList = headers();
     const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
-    const timestamp = new Date().toISOString();
+    
+    const rateLimitResult = await rateLimit(ip);
+    if (!rateLimitResult.success) {
+      console.log('[submit-lead] Rate limit exceeded for IP:', ip);
+      return NextResponse.json(
+        { error: 'Too many requests', retryAfter: rateLimitResult.retryAfter },
+        { status: 429 }
+      );
+    }
     
     // Parse request data
-    let data: LeadData;
+    let data: OfferLeadData;
     try {
       data = await request.json();
       console.log('[submit-lead] Parsed data:', { 
         hasAddress: !!data.address,
         hasPhone: !!data.phone,
-        hasEmail: !!data.email 
+        hasEmail: !!data.email,
+        fullName: data.fullName
       });
     } catch (parseError) {
       console.error('[submit-lead] Error parsing JSON:', parseError);
@@ -84,47 +105,115 @@ export async function POST(request: Request) {
       ? `(${phoneDigits.slice(0, 3)}) ${phoneDigits.slice(3, 6)}-${phoneDigits.slice(6)}`
       : data.phone;
 
-    // Prepare lead data
-    const leadData = {
-      leadId: `lead_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      address: data.address,
-      phone: formattedPhone,
-      fullName: data.fullName,
+    // Verify phone number with Numverify
+    const phoneVerification = await verifyPhoneNumberWithCache(formattedPhone);
+    if (!phoneVerification.isValid) {
+      console.error('[submit-lead] Phone verification failed:', phoneVerification.error);
+      return NextResponse.json(
+        { error: phoneVerification.error || 'Invalid phone number' },
+        { status: 400 }
+      );
+    }
+    console.log('[submit-lead] Phone verified successfully');
+
+    // Split full name into first and last name
+    const nameParts = data.fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || nameParts[0] || ''; // Use first name as last if only one name
+
+    // Prepare lead data for GHL and Google Sheets
+    const leadFormData: LeadFormData = {
+      leadId,
+      firstName,
+      lastName,
       email: data.email.toLowerCase(),
+      phone: formattedPhone,
+      address: data.address,
       propertyCondition: data.propertyCondition,
-      timeline: data.timeline,
-      source: data.source || 'offer-page',
-      timestamp: data.timestamp || timestamp,
-      ipAddress: ip,
-      userAgent: headersList.get('user-agent') || 'unknown'
+      timeframe: data.timeline,
+      timestamp,
+      lastUpdated: timestamp,
+      submissionType: 'complete',
+      referralSource: data.source || 'offer-page'
     };
 
-    // Log successful submission
-    console.log('[submit-lead] Lead captured successfully:', {
-      leadId: leadData.leadId,
-      source: leadData.source,
-      timestamp: leadData.timestamp
+    console.log('[submit-lead] Prepared lead data:', {
+      leadId,
+      firstName,
+      lastName,
+      source: leadFormData.referralSource
     });
 
-    // Here you would typically:
-    // 1. Save to database
-    // 2. Send to CRM (GoHighLevel, etc.)
-    // 3. Send notification emails
-    // 4. Trigger automation workflows
+    // Send to Google Sheets
+    let googleSheetsSuccess = false;
+    try {
+      await initializeGoogleSheets();
+      googleSheetsSuccess = await googleSheetsClient.appendPropertyLead(leadFormData);
+      if (googleSheetsSuccess) {
+        console.log('[submit-lead] Successfully sent to Google Sheets');
+      } else {
+        console.error('[submit-lead] Failed to send to Google Sheets');
+      }
+    } catch (error) {
+      console.error('[submit-lead] Error sending to Google Sheets:', error);
+    }
 
-    // For now, we'll just return success
-    return NextResponse.json({ 
-      success: true,
-      leadId: leadData.leadId,
-      message: 'Your information has been received. We will contact you within 24 hours.'
-    });
+    // Send to Go High Level
+    let ghlSuccess = false;
+    let ghlError = null;
+    
+    if (goHighLevel.isEnabled()) {
+      try {
+        const ghlFormattedData = goHighLevel.formatFormData(leadFormData);
+        const ghlResult = await goHighLevel.sendLeadWithRetry(ghlFormattedData);
+        
+        if (ghlResult.success) {
+          console.log('[submit-lead] Successfully sent to Go High Level');
+          ghlSuccess = true;
+        } else {
+          console.error('[submit-lead] Failed to send to Go High Level:', ghlResult.error);
+          ghlError = ghlResult.error;
+        }
+      } catch (error) {
+        console.error('[submit-lead] Unexpected error sending to Go High Level:', error);
+        ghlError = error instanceof Error ? error.message : 'Unknown GHL error';
+      }
+    } else {
+      console.log('[submit-lead] Go High Level integration is not enabled');
+      ghlError = 'GHL not configured';
+    }
+
+    // Check if at least one system captured the lead
+    if (googleSheetsSuccess || ghlSuccess) {
+      console.log('[submit-lead] Lead captured successfully:', {
+        leadId,
+        googleSheets: googleSheetsSuccess,
+        goHighLevel: ghlSuccess,
+        timestamp
+      });
+
+      if (!ghlSuccess && ghlError) {
+        console.warn('[submit-lead] GHL failed but lead was saved to Google Sheets:', ghlError);
+      }
+
+      return NextResponse.json({ 
+        success: true,
+        leadId,
+        message: 'Your information has been received. We will contact you within 24 hours.',
+        warning: !ghlSuccess ? 'Lead saved to backup system' : undefined
+      });
+    } else {
+      // Both systems failed
+      throw new Error(`Failed to save lead to any system. GHL: ${ghlError}, Sheets: Failed`);
+    }
 
   } catch (error) {
     console.error('[submit-lead] Unexpected error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
       { 
         error: 'An error occurred while processing your request',
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       },
       { status: 500 }
     );

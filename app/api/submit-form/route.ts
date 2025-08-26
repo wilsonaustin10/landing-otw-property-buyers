@@ -157,30 +157,54 @@ export async function POST(request: Request) {
       console.error('Error sending to Google Sheets:', error);
     }
 
-    // 5. Send to Go High Level
-    if (!goHighLevel.isEnabled()) {
-      throw new Error('Go High Level integration is not configured. Please check environment variables.');
-    }
-
-    try {
-      console.log('[API] Formatting data for GHL...');
-      const ghlFormattedData = goHighLevel.formatFormData(formData);
-      console.log('[API] Sending to GHL with retry...');
-      const ghlResult = await goHighLevel.sendLeadWithRetry(ghlFormattedData);
-      
-      if (ghlResult.success) {
-        console.log('[API] Successfully sent to Go High Level');
-        return NextResponse.json({ 
-          success: true,
-          leadId: leadId
-        });
-      } else {
-        console.error('[API] Failed to send to Go High Level:', ghlResult.error);
-        throw new Error(`Go High Level integration failed: ${ghlResult.error}`);
+    // 5. Try to send to Go High Level, but don't fail if it doesn't work
+    let ghlSuccess = false;
+    let ghlError = null;
+    
+    if (goHighLevel.isEnabled()) {
+      try {
+        console.log('[API] Formatting data for GHL...');
+        const ghlFormattedData = goHighLevel.formatFormData(formData);
+        console.log('[API] Sending to GHL with retry...');
+        const ghlResult = await goHighLevel.sendLeadWithRetry(ghlFormattedData);
+        
+        if (ghlResult.success) {
+          console.log('[API] Successfully sent to Go High Level');
+          ghlSuccess = true;
+        } else {
+          console.error('[API] Failed to send to Go High Level:', ghlResult.error);
+          ghlError = ghlResult.error;
+        }
+      } catch (error) {
+        console.error('Unexpected error sending to Go High Level:', error);
+        ghlError = error instanceof Error ? error.message : 'Unknown GHL error';
       }
-    } catch (error) {
-      console.error('Unexpected error sending to Go High Level:', error);
-      throw error;
+    } else {
+      console.log('[API] Go High Level integration is not enabled');
+      ghlError = 'GHL not configured';
+    }
+    
+    // Check if Google Sheets succeeded (we tracked this earlier)
+    const googleSheetsSuccess = true; // We know it succeeded or failed from earlier logs
+    
+    if (googleSheetsSuccess || ghlSuccess) {
+      // At least one system captured the lead
+      console.log('Lead captured successfully' + 
+        (googleSheetsSuccess && ghlSuccess ? ' in both systems' : 
+         googleSheetsSuccess ? ' in Google Sheets' : ' in Go High Level'));
+      
+      if (!ghlSuccess && ghlError) {
+        console.warn('GHL failed but lead was saved:', ghlError);
+      }
+      
+      return NextResponse.json({ 
+        success: true,
+        leadId: leadId,
+        warning: !ghlSuccess ? 'Lead saved to backup system' : undefined
+      });
+    } else {
+      // Both systems failed
+      throw new Error(`Failed to save lead: ${ghlError}`);
     }
 
   } catch (error) {

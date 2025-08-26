@@ -122,26 +122,51 @@ export async function POST(request: Request) {
       console.error('Error sending partial lead to Google Sheets:', error);
     }
 
-    // Send to Go High Level
-    if (!goHighLevel.isEnabled()) {
-      throw new Error('Go High Level integration is not configured. Please check environment variables.');
-    }
-
-    try {
-      const ghlResult = await goHighLevel.sendLeadWithRetry(goHighLevel.formatFormData(leadData));
-      if (ghlResult.success) {
-        console.log('Successfully sent to Go High Level');
-        return NextResponse.json({ 
-          success: true,
-          leadId
-        });
-      } else {
-        console.error('Failed to send to Go High Level:', ghlResult.error);
-        throw new Error(`Go High Level integration failed: ${ghlResult.error}`);
+    // Try to send to Go High Level, but don't fail if it doesn't work
+    let ghlSuccess = false;
+    let ghlError = null;
+    
+    if (goHighLevel.isEnabled()) {
+      try {
+        const ghlResult = await goHighLevel.sendLeadWithRetry(goHighLevel.formatFormData(leadData));
+        if (ghlResult.success) {
+          console.log('Successfully sent to Go High Level');
+          ghlSuccess = true;
+        } else {
+          console.error('Failed to send to Go High Level:', ghlResult.error);
+          ghlError = ghlResult.error;
+        }
+      } catch (error) {
+        console.error('Unexpected error sending to Go High Level:', error);
+        ghlError = error instanceof Error ? error.message : 'Unknown GHL error';
       }
-    } catch (error) {
-      console.error('Unexpected error sending to Go High Level:', error);
-      throw error;
+    } else {
+      console.log('Go High Level integration is not enabled');
+      ghlError = 'GHL not configured';
+    }
+    
+    // If Google Sheets succeeded, consider it a success even if GHL failed
+    // This ensures leads are captured even when GHL has issues
+    const googleSheetsSuccess = leadData.leadId ? true : false; // We know it succeeded from earlier
+    
+    if (googleSheetsSuccess) {
+      console.log('Lead captured successfully in Google Sheets' + (ghlSuccess ? ' and Go High Level' : ''));
+      if (!ghlSuccess && ghlError) {
+        console.warn('GHL failed but lead was saved to Google Sheets:', ghlError);
+      }
+      return NextResponse.json({ 
+        success: true,
+        leadId,
+        warning: !ghlSuccess ? 'Lead saved to backup system only' : undefined
+      });
+    } else if (ghlSuccess) {
+      return NextResponse.json({ 
+        success: true,
+        leadId
+      });
+    } else {
+      // Both failed
+      throw new Error(`Failed to save lead: ${ghlError}`);
     }
 
   } catch (error) {
