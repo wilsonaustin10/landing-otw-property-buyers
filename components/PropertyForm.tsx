@@ -232,7 +232,7 @@ export default function PropertyForm() {
                 required
               />
               <span className="text-sm text-gray-600">
-                By checking this box, I consent to being contacted by phone, email, or text message about my property sale inquiry, including through auto-dialed or pre-recorded messages.
+                I agree to the <a href="/terms" target="_blank" className="underline text-primary hover:text-primary/80">Terms & Conditions</a> and <a href="/privacy" target="_blank" className="underline text-primary hover:text-primary/80">Privacy Policy</a>. By submitting this form, you consent to receive SMS messages and/or emails and/or calls from Nexstep Homebuyers. Message frequency varies. To unsubscribe, follow the instructions provided in our communications. Msg & data rates may apply for SMS. Your information is secure and will not be sold to third parties. Text HELP for HELP, text STOP to cancel.
               </span>
             </label>
             {errors.consent && touched.consent && (

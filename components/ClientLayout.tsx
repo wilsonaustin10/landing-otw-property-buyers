@@ -1,11 +1,11 @@
 'use client';
 
 import { FormProvider } from '../context/FormContext';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import Header from './Header';
+import Footer from './Footer';
 import Script from 'next/script';
-import GoogleTagDebugger from '../components/GoogleTagDebugger';
-import GooglePlacesDebugger from '../components/GooglePlacesDebugger';
+import GoogleTagDebugger from './GoogleTagDebugger';
+import GooglePlacesDebugger from './GooglePlacesDebugger';
 
 export default function ClientLayout({
   children,

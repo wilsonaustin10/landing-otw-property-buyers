@@ -25,7 +25,7 @@ export default function CashOfferPage() {
           <div className="text-center mb-8">
             <Image
               src="/OTW TP.png"
-              alt="OTW Property Buyers"
+              alt="NexStep HomeBuyers LLC"
               width={280}
               height={75}
               className="mx-auto mb-8"
@@ -102,7 +102,7 @@ export default function CashOfferPage() {
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-900">
-            Why Sell Your House To OTW Property Buyers?
+            Why Sell Your House To NexStep HomeBuyers LLC?
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow">

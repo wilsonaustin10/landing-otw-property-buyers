@@ -5,9 +5,15 @@ import { rateLimit } from '@/utils/rateLimit';
 import { goHighLevel } from '@/utils/goHighLevelV2';
 import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
 import { googleSheetsClient, initializeGoogleSheets } from '@/utils/googleSheets';
+import { zapierClient } from '@/utils/zapier';
 
 interface OfferLeadData {
   address: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  placeId?: string;
   phone: string;
   fullName: string;
   email: string;
@@ -129,6 +135,11 @@ export async function POST(request: Request) {
       email: data.email.toLowerCase(),
       phone: formattedPhone,
       address: data.address,
+      streetAddress: data.streetAddress,
+      city: data.city,
+      state: data.state,
+      postalCode: data.postalCode,
+      placeId: data.placeId,
       propertyCondition: data.propertyCondition,
       timeframe: data.timeline,
       timestamp,
@@ -142,10 +153,39 @@ export async function POST(request: Request) {
       leadId,
       firstName,
       lastName,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      postalCode: data.postalCode,
       source: leadFormData.referralSource
     });
 
-    // Send to Google Sheets
+    // Send to Zapier webhook (primary)
+    let zapierSuccess = false;
+    let zapierError = null;
+    
+    if (zapierClient.isEnabled()) {
+      try {
+        console.log('[submit-lead] Sending to Zapier webhook...');
+        const zapierResult = await zapierClient.sendToZapierWithRetry(leadFormData);
+        
+        if (zapierResult.success) {
+          console.log('[submit-lead] Successfully sent to Zapier');
+          zapierSuccess = true;
+        } else {
+          console.error('[submit-lead] Failed to send to Zapier:', zapierResult.error);
+          zapierError = zapierResult.error;
+        }
+      } catch (error) {
+        console.error('[submit-lead] Unexpected error sending to Zapier:', error);
+        zapierError = error instanceof Error ? error.message : 'Unknown Zapier error';
+      }
+    } else {
+      console.log('[submit-lead] Zapier integration is not enabled');
+      zapierError = 'Zapier not configured';
+    }
+
+    // Send to Google Sheets (backup)
     let googleSheetsSuccess = false;
     try {
       await initializeGoogleSheets();
@@ -159,7 +199,7 @@ export async function POST(request: Request) {
       console.error('[submit-lead] Error sending to Google Sheets:', error);
     }
 
-    // Send to Go High Level
+    // Send to Go High Level (tertiary)
     let ghlSuccess = false;
     let ghlError = null;
     
@@ -185,27 +225,31 @@ export async function POST(request: Request) {
     }
 
     // Check if at least one system captured the lead
-    if (googleSheetsSuccess || ghlSuccess) {
-      console.log('[submit-lead] Lead captured successfully:', {
+    if (zapierSuccess || googleSheetsSuccess || ghlSuccess) {
+      const systems = [];
+      if (zapierSuccess) systems.push('Zapier');
+      if (googleSheetsSuccess) systems.push('Google Sheets');
+      if (ghlSuccess) systems.push('Go High Level');
+      
+      console.log('[submit-lead] Lead captured successfully in:', systems.join(', '), {
         leadId,
-        googleSheets: googleSheetsSuccess,
-        goHighLevel: ghlSuccess,
         timestamp
       });
 
-      if (!ghlSuccess && ghlError) {
-        console.warn('[submit-lead] GHL failed but lead was saved to Google Sheets:', ghlError);
+      if (!zapierSuccess && zapierError) {
+        console.warn('[submit-lead] Zapier failed but lead was saved to backup:', zapierError);
       }
 
       return NextResponse.json({ 
         success: true,
         leadId,
         message: 'Your information has been received. We will contact you within 24 hours.',
-        warning: !ghlSuccess ? 'Lead saved to backup system' : undefined
+        systems: systems,
+        warning: !zapierSuccess ? 'Lead saved to backup systems' : undefined
       });
     } else {
-      // Both systems failed
-      throw new Error(`Failed to save lead to any system. GHL: ${ghlError}, Sheets: Failed`);
+      // All systems failed
+      throw new Error(`Failed to save lead to any system. Zapier: ${zapierError}, Sheets: Failed, GHL: ${ghlError}`);
     }
 
   } catch (error) {

@@ -11,16 +11,16 @@ module.exports = {
         'xs': '475px',
       },
       colors: {
-        primary: '#7dd3c0', // Seafoam
-        secondary: '#ff6b6b', // Coral
-        accent: '#1e3a8a', // Navy blue
-        highlight: '#fbbf24', // Warm yellow
+        primary: '#1e3a8a', // Blue-900
+        secondary: '#dc2626', // Red-600
+        accent: '#b91c1c', // Red-700
+        highlight: '#172554', // Blue-950
         background: '#ffffff', // White
-        text: '#1f2937', // Charcoal gray for regular text
+        text: '#333333', // Dark gray for regular text
         footer: {
-          bg: '#1e3a8a', // Navy blue
-          text: '#ffffff', // White
-          hover: '#ff6b6b', // Coral
+          bg: '#ffffff',
+          text: '#333333', 
+          hover: '#1e3a8a',
         }
       },
       animation: {

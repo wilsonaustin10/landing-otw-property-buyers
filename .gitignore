@@ -61,3 +61,4 @@ Thumbs.db
 certificates/localhost.key
 
 temp_repo/
+.env.local.bak
