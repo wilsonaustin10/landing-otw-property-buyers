@@ -6,9 +6,9 @@ import { ChevronRight, ChevronLeft, Home, Phone, User, Mail, Clock, CheckCircle 
 import { formatPhoneNumber, isValidPhoneNumber } from '../utils/phoneFormatter';
 import dynamic from 'next/dynamic';
 
-// Dynamically import AddressInput to avoid SSR issues with Google Maps
-const AddressInput = dynamic(
-  () => import('./AddressInput'),
+// Dynamically import AddressAutocomplete to avoid SSR issues with Google Maps
+const AddressAutocomplete = dynamic(
+  () => import('./AddressAutocomplete'),
   { 
     ssr: false,
     loading: () => (
@@ -31,17 +31,11 @@ const AddressInput = dynamic(
 
 interface FormData {
   address: string;
-  streetAddress?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  placeId?: string;
   phone: string;
   fullName: string;
   email: string;
   propertyCondition: string;
   timeline: string;
-  consent: boolean;
 }
 
 const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
@@ -80,17 +74,11 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
     }
     return {
       address: '',
-      streetAddress: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      placeId: '',
       phone: '',
       fullName: '',
       email: '',
       propertyCondition: '',
-      timeline: '',
-      consent: false
+      timeline: ''
     };
   });
 
@@ -170,9 +158,6 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
         } else if (!validateEmail(formData.email)) {
           newErrors.email = 'Please enter a valid email address';
         }
-        if (!formData.consent) {
-          newErrors.consent = 'You must agree to the terms to continue';
-        }
         break;
       case 4:
         if (formData.propertyCondition === '') {
@@ -223,11 +208,11 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Form submission failed:', response.status, errorData);
-        alert(`There was an error submitting your form (Error ${response.status}). Please try again or call us directly at (636) 238-5598.`);
+        alert(`There was an error submitting your form (Error ${response.status}). Please try again or call us directly at (505) 560-3532.`);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('There was an error submitting your form. Please try again or call us directly at (636) 238-5598.');
+      alert('There was an error submitting your form. Please try again or call us directly at (505) 560-3532.');
     } finally {
       setIsSubmitting(false);
     }
@@ -267,22 +252,15 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
       case 1:
         return (
           <div className="space-y-4">
-            <AddressInput
-              onAddressSelect={async (addressData) => {
-                const streetAddress = addressData.streetNumber && addressData.street 
-                  ? `${addressData.streetNumber} ${addressData.street}`.trim()
-                  : '';
-                setFormData(prev => ({ 
-                  ...prev, 
-                  address: addressData.formattedAddress,
-                  streetAddress: streetAddress,
-                  city: addressData.city || '',
-                  state: addressData.state || '',
-                  postalCode: addressData.postalCode || '',
-                  placeId: addressData.placeId || ''
-                }));
+            <AddressAutocomplete
+              value={formData.address}
+              onChange={(value) => {
+                setFormData(prev => ({ ...prev, address: value }));
                 if (errors.address) setErrors(prev => ({ ...prev, address: '' }));
               }}
+              placeholder="Enter your property address"
+              className={`w-full px-4 py-3 border-2 ${errors.address ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-gray-900`}
+              autoFocus
               error={errors.address}
             />
           </div>
@@ -375,29 +353,6 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
                 <p id="email-error" className="text-xs text-red-500 mt-1" role="alert">{errors.email}</p>
               ) : (
                 <p id="email-hint" className="text-xs text-gray-500 mt-1">We'll send your cash offer details here</p>
-              )}
-            </div>
-            
-            <div className="border-t pt-4">
-              <label className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-1 h-4 w-4 text-secondary border-gray-300 rounded focus:ring-2 focus:ring-secondary"
-                  checked={formData.consent}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, consent: e.target.checked }));
-                    if (errors.consent) setErrors(prev => ({ ...prev, consent: '' }));
-                  }}
-                  aria-required="true"
-                  aria-invalid={!!errors.consent}
-                  aria-describedby={errors.consent ? 'consent-error' : undefined}
-                />
-                <span className="text-xs text-gray-600 leading-relaxed">
-                  I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">Terms & Conditions</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80">Privacy Policy</a>. By submitting this form, you consent to receive SMS messages and/or emails and/or calls from Nexstep Homebuyers. Message frequency varies. To unsubscribe, follow the instructions provided in our communications. Msg & data rates may apply for SMS. Your information is secure and will not be sold to third parties. Text HELP for HELP, text STOP to cancel.
-                </span>
-              </label>
-              {errors.consent && (
-                <p id="consent-error" className="text-xs text-red-500 mt-2 ml-7" role="alert">{errors.consent}</p>
               )}
             </div>
           </div>

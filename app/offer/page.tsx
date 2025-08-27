@@ -11,8 +11,8 @@ import {
 import Script from 'next/script';
 import Image from 'next/image';
 
-const companyName = 'NexStep HomeBuyers LLC';
-const phoneNumber = '(636) 238-5598';
+const companyName = 'OTW Property Buyers';
+const phoneNumber = '(505) 560-3532';
 
 function OfferPageContent() {
   const searchParams = useSearchParams();
@@ -90,7 +90,7 @@ function OfferPageContent() {
   const testimonials = [
     {
       name: 'Sarah M.',
-      location: hasLocation ? `${city}, ${state}` : 'St. Louis, MO',
+      location: hasLocation ? `${city}, ${state}` : 'Dallas, TX',
       rating: 5,
       text: 'Sold my inherited property in just 10 days. No repairs, no hassle, and they handled everything professionally.',
       timeAgo: '1 week ago',
@@ -99,16 +99,16 @@ function OfferPageContent() {
     },
     {
       name: 'Michael R.',
-      location: 'St. Louis, MO',
+      location: 'Fort Worth, TX',
       rating: 5,
-      text: 'Facing foreclosure and needed to sell fast. NexStep gave me a fair offer and closed in a week. Saved my credit!',
+      text: 'Facing foreclosure and needed to sell fast. OTW Property Buyers gave me a fair offer and closed in a week. Saved my credit!',
       timeAgo: '2 months ago',
       initials: 'MR',
       bgColor: 'bg-blue-500'
     },
     {
       name: 'Jennifer L.',
-      location: 'St. Louis, MO',
+      location: 'Arlington, TX',
       rating: 5,
       text: 'The house needed too many repairs to list traditionally. They bought it as-is and the process was incredibly smooth.',
       timeAgo: '4 months ago',
@@ -117,16 +117,16 @@ function OfferPageContent() {
     },
     {
       name: 'David K.',
-      location: 'St. Louis, MO',
+      location: 'Plano, TX',
       rating: 5,
-      text: 'Had to relocate for work urgently. NexStep HomeBuyers LLC offered a fair price and closed in 5 days. No realtor fees or hassles!',
+      text: 'Had to relocate for work urgently. OTW offered a fair price and closed in 5 days. No realtor fees or hassles!',
       timeAgo: '3 weeks ago',
       initials: 'DK',
       bgColor: 'bg-purple-500'
     },
     {
       name: 'Linda P.',
-      location: 'St. Louis, MO',
+      location: 'Houston, TX',
       rating: 5,
       text: 'Dealt with a difficult divorce situation. They were compassionate, professional, and made everything simple. Highly recommend!',
       timeAgo: '6 weeks ago',
@@ -135,7 +135,7 @@ function OfferPageContent() {
     },
     {
       name: 'Robert T.',
-      location: 'St. Louis, MO',
+      location: 'Austin, TX',
       rating: 5,
       text: 'Property had foundation issues and water damage. They still gave me a great offer and handled all the paperwork. Amazing service!',
       timeAgo: '2 weeks ago',
@@ -151,8 +151,8 @@ function OfferPageContent() {
           "@context": "https://schema.org",
           "@type": "LocalBusiness",
           "name": companyName,
-          "image": "/Nexstep Red White Blue 1024px.png",
-          "url": typeof window !== 'undefined' ? window.location.origin : 'https://nexstephomebuyers.com',
+          "image": "/OTW TP.png",
+          "url": typeof window !== 'undefined' ? window.location.origin : 'https://otwpropertybuyers.com',
           "telephone": phoneNumber,
           "areaServed": hasLocation ? `${metro} Metroplex` : "United States",
           "address": hasLocation ? {
@@ -180,8 +180,8 @@ function OfferPageContent() {
             <div>
               <div className="mb-6 flex justify-center md:justify-start">
                 <Image
-                  src="/Nexstep Red White Blue 1024px.png"
-                  alt="NexStep HomeBuyers LLC"
+                  src="/OTW TP.png"
+                  alt="OTW Property Buyers"
                   width={200}
                   height={53}
                   className="object-contain"
@@ -211,7 +211,7 @@ function OfferPageContent() {
                   href={`tel:${phoneNumber.replace(/[^\d]/g, '')}`}
                   onClick={handlePhoneClick}
                   className="flex-1 bg-secondary text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 transition-colors flex items-center justify-center"
-                  aria-label="Call NexStep HomeBuyers LLC"
+                  aria-label="Call OTW Property Buyers"
                 >
                   <Phone className="w-5 h-5 mr-2" />
                   Call Now
@@ -220,7 +220,7 @@ function OfferPageContent() {
                   href={`sms:${phoneNumber.replace(/[^\d]/g, '')}`}
                   onClick={handleSmsClick}
                   className="flex-1 bg-accent text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 transition-colors flex items-center justify-center"
-                  aria-label="Text NexStep HomeBuyers LLC"
+                  aria-label="Text OTW Property Buyers"
                 >
                   <MessageSquare className="w-5 h-5 mr-2" />
                   Text Us
@@ -472,7 +472,7 @@ function OfferPageContent() {
               href={`tel:${phoneNumber.replace(/[^\d]/g, '')}`}
               onClick={handlePhoneClick}
               className="bg-white text-accent py-3 sm:py-4 px-6 sm:px-8 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center justify-center"
-              aria-label="Call NexStep HomeBuyers LLC"
+              aria-label="Call OTW Property Buyers"
             >
               <Phone className="mr-2 w-5 h-5" />
               Call {phoneNumber}

@@ -5,18 +5,18 @@ import Image from 'next/image';
 
 export default function Footer() {
   return (
-    <footer className="bg-footer-bg text-footer-text border-t border-gray-200">
+    <footer className="bg-primary text-footer-text">
       <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10 md:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center">
               <Image
-                src="/Nexstep Red White Blue 1024px.png"
-                alt="NexStep HomeBuyers LLC"
-                width={120}
-                height={120}
-                className="mr-2"
+                src="/OTW TP.png"
+                alt="OTW Property Buyers"
+                width={100}
+                height={100}
+                className="mr-2 w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[120px] md:h-[120px]"
               />
             </div>
             <p className="text-footer-text/90">
@@ -24,18 +24,18 @@ export default function Footer() {
             </p>
             <div className="space-y-2">
               <a 
-                href="tel:6362385598"
+                href="tel:(505)560-3532"
                 className="flex items-center space-x-2 text-footer-text/80 hover:text-footer-hover transition-colors"
               >
                 <Phone className="h-4 w-4" />
-                <span>(636) 238-5598</span>
+                <span>(505)560-3532</span>
               </a>
               <a 
-                href="mailto:info@nexstephomebuyers.com"
+                href="mailto:"
                 className="flex items-center space-x-2 text-footer-text/80 hover:text-footer-hover transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                <span>info@nexstephomebuyers.com</span>
+                <span></span>
               </a>
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-footer-text/20 text-center text-footer-text/80">
-          <p>© {new Date().getFullYear()} NexStep HomeBuyers LLC. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} OTW Property Buyers. All rights reserved.</p>
           <div className="mt-2 space-x-4">
             <Link href="/privacy" className="hover:text-footer-hover transition-colors">
               Privacy Policy

@@ -8,7 +8,7 @@ const testimonials = [
     rating: 5,
     date: "2 weeks ago",
     title: "Sold my house in just 10 days!",
-    content: "I was facing foreclosure and needed to sell fast. NexStep HomeBuyers LLC gave me a fair cash offer within 24 hours and we closed in just 10 days. They handled everything and were so professional throughout the entire process.",
+    content: "I was facing foreclosure and needed to sell fast. OTW Property Buyers gave me a fair cash offer within 24 hours and we closed in just 10 days. They handled everything and were so professional throughout the entire process.",
     verified: true
   },
   {
@@ -17,7 +17,7 @@ const testimonials = [
     rating: 5,
     date: "1 month ago",
     title: "No repairs needed - sold as-is!",
-    content: "My house needed major repairs that I couldn't afford. Other buyers wanted me to fix everything first, but NexStep HomeBuyers LLC bought it exactly as it was. They even helped me move out and were flexible with my timeline.",
+    content: "My house needed major repairs that I couldn't afford. Other buyers wanted me to fix everything first, but OTW bought it exactly as it was. They even helped me move out and were flexible with my timeline.",
     verified: true
   },
   {
@@ -26,7 +26,7 @@ const testimonials = [
     rating: 5,
     date: "3 weeks ago",
     title: "Inheritance property sold hassle-free",
-    content: "Inherited a property from my parents and didn't know what to do with it. NexStep HomeBuyers LLC made the process so simple. No real estate agents, no showings, no stress. Just a straightforward cash offer and quick closing.",
+    content: "Inherited a property from my parents and didn't know what to do with it. OTW made the process so simple. No real estate agents, no showings, no stress. Just a straightforward cash offer and quick closing.",
     verified: true
   },
   {
@@ -34,8 +34,8 @@ const testimonials = [
     location: "Los Angeles, CA",
     rating: 5,
     date: "2 months ago",
-    title: "Avoided foreclosure thanks to NexStep HomeBuyers LLC",
-    content: "I was months behind on payments and facing foreclosure. NexStep HomeBuyers LLC worked with me to close quickly and even gave me extra time to find a new place. They literally saved my credit.",
+    title: "Avoided foreclosure thanks to OTW",
+    content: "I was months behind on payments and facing foreclosure. OTW Property Buyers worked with me to close quickly and even gave me extra time to find a new place. They literally saved my credit.",
     verified: true
   },
   {
@@ -44,7 +44,7 @@ const testimonials = [
     rating: 5,
     date: "1 month ago",
     title: "Divorce settlement made easy",
-    content: "Going through a divorce and needed to sell our house quickly. NexStep HomeBuyers LLC gave us a fair offer and closed in 2 weeks. No having strangers walk through during showings. It was exactly what we needed during a difficult time.",
+    content: "Going through a divorce and needed to sell our house quickly. OTW gave us a fair offer and closed in 2 weeks. No having strangers walk through during showings. It was exactly what we needed during a difficult time.",
     verified: true
   },
   {
@@ -53,7 +53,7 @@ const testimonials = [
     rating: 5,
     date: "6 weeks ago",
     title: "Best decision I made!",
-    content: "Had terrible tenants who destroyed my rental property. NexStep HomeBuyers LLC bought it without requiring any cleanup or repairs. The whole team was understanding and made everything so easy. Highly recommend!",
+    content: "Had terrible tenants who destroyed my rental property. OTW bought it without requiring any cleanup or repairs. The whole team was understanding and made everything so easy. Highly recommend!",
     verified: true
   }
 ];

@@ -34,35 +34,22 @@ class GoogleSheetsClient {
       const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
       
       if (!credentials) {
-        console.warn('[GoogleSheets] GOOGLE_SERVICE_ACCOUNT_KEY environment variable not set - Google Sheets integration disabled');
-        this.initialized = false;
+        console.warn('GOOGLE_SERVICE_ACCOUNT_KEY environment variable not set');
         return;
       }
 
-      // Check if credentials look incomplete
-      if (credentials.trim().length < 100 || !credentials.includes('"type"')) {
-        console.error('[GoogleSheets] GOOGLE_SERVICE_ACCOUNT_KEY appears incomplete or invalid');
-        console.error('[GoogleSheets] Please ensure you have copied the entire JSON service account key');
-        console.error('[GoogleSheets] Key should start with { and end with } and contain fields like "type", "project_id", "private_key", etc.');
-        this.initialized = false;
-        return;
-      }
-
-      console.log('[GoogleSheets] Attempting to parse Google Service Account credentials...');
+      console.log('Attempting to parse Google Service Account credentials...');
       
       let credentialsJson;
       try {
         credentialsJson = JSON.parse(credentials);
       } catch (e) {
         try {
-          // Try with newline replacement
           credentialsJson = JSON.parse(credentials.replace(/\\n/g, '\n'));
         } catch (e2) {
-          console.error('[GoogleSheets] Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY as JSON');
-          console.error('[GoogleSheets] Make sure the entire JSON key is properly copied to .env.local');
-          console.error('[GoogleSheets] First 100 chars of key:', credentials.substring(0, 100));
-          this.initialized = false;
-          return;
+          console.error('Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY. Make sure it\'s valid JSON.');
+          console.error('First 100 chars of key:', credentials.substring(0, 100));
+          throw e2;
         }
       }
       

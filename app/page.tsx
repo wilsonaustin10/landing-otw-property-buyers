@@ -16,10 +16,10 @@ export default function Home() {
           <div className="max-w-3xl mx-auto text-center">
             <div className="mb-1.5 md:mb-3 flex justify-center">
               <Image
-                src="/Nexstep Red White Blue 1024px.png"
-                alt="NexStep HomeBuyers LLC"
-                width={300}
-                height={80}
+                src="/OTW TP.png"
+                alt="OTW Property Buyers"
+                width={200}
+                height={53}
                 className="object-contain animate-float"
                 priority
               />

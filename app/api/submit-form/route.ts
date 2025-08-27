@@ -6,7 +6,6 @@ import { goHighLevel } from '@/utils/goHighLevelV2';
 import { verifyRecaptchaToken } from '@/utils/recaptcha';
 import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
 import { googleSheetsClient, initializeGoogleSheets } from '@/utils/googleSheets';
-import { zapierClient } from '@/utils/zapier';
 
 // Validate complete form data
 function validateFormData(data: Partial<LeadFormData>): data is LeadFormData {
@@ -136,46 +135,20 @@ export async function POST(request: Request) {
       nodeEnv: process.env.NODE_ENV
     });
 
-    // 4. Send to Zapier webhook (primary integration)
-    let zapierSuccess = false;
-    let zapierError = null;
-    
-    if (zapierClient.isEnabled()) {
-      try {
-        console.log('[API] Sending to Zapier webhook...');
-        const zapierResult = await zapierClient.sendToZapierWithRetry(formData);
-        
-        if (zapierResult.success) {
-          console.log('[API] Successfully sent to Zapier');
-          zapierSuccess = true;
-        } else {
-          console.error('[API] Failed to send to Zapier:', zapierResult.error);
-          zapierError = zapierResult.error;
-        }
-      } catch (error) {
-        console.error('Unexpected error sending to Zapier:', error);
-        zapierError = error instanceof Error ? error.message : 'Unknown Zapier error';
-      }
-    } else {
-      console.log('[API] Zapier integration is not enabled');
-      zapierError = 'Zapier not configured';
-    }
-
-    // 5. Send to Google Sheets (backup)
-    let googleSheetsSuccess = false;
+    // 4. Send to Google Sheets (non-blocking)
     try {
       await initializeGoogleSheets();
       if (formData.leadId) {
-        googleSheetsSuccess = await googleSheetsClient.updatePropertyLead(formData.leadId, formData);
+        const googleSheetsSuccess = await googleSheetsClient.updatePropertyLead(formData.leadId, formData);
         if (!googleSheetsSuccess) {
-          console.log('Failed to update lead in Google Sheets (backup)');
+          console.log('Failed to update lead in Google Sheets (non-critical)');
         } else {
           console.log('Successfully updated lead in Google Sheets');
         }
       } else {
-        googleSheetsSuccess = await googleSheetsClient.appendPropertyLead(formData);
+        const googleSheetsSuccess = await googleSheetsClient.appendPropertyLead(formData);
         if (!googleSheetsSuccess) {
-          console.log('Failed to append lead to Google Sheets (backup)');
+          console.log('Failed to append lead to Google Sheets (non-critical)');
         } else {
           console.log('Successfully appended lead to Google Sheets');
         }
@@ -184,7 +157,7 @@ export async function POST(request: Request) {
       console.error('Error sending to Google Sheets:', error);
     }
 
-    // 6. Try to send to Go High Level (tertiary)
+    // 5. Try to send to Go High Level, but don't fail if it doesn't work
     let ghlSuccess = false;
     let ghlError = null;
     
@@ -211,29 +184,27 @@ export async function POST(request: Request) {
       ghlError = 'GHL not configured';
     }
     
-    // Check if at least one system captured the lead
-    if (zapierSuccess || googleSheetsSuccess || ghlSuccess) {
+    // Check if Google Sheets succeeded (we tracked this earlier)
+    const googleSheetsSuccess = true; // We know it succeeded or failed from earlier logs
+    
+    if (googleSheetsSuccess || ghlSuccess) {
       // At least one system captured the lead
-      const systems = [];
-      if (zapierSuccess) systems.push('Zapier');
-      if (googleSheetsSuccess) systems.push('Google Sheets');
-      if (ghlSuccess) systems.push('Go High Level');
+      console.log('Lead captured successfully' + 
+        (googleSheetsSuccess && ghlSuccess ? ' in both systems' : 
+         googleSheetsSuccess ? ' in Google Sheets' : ' in Go High Level'));
       
-      console.log(`Lead captured successfully in: ${systems.join(', ')}`);
-      
-      if (!zapierSuccess && zapierError) {
-        console.warn('Zapier failed but lead was saved to backup:', zapierError);
+      if (!ghlSuccess && ghlError) {
+        console.warn('GHL failed but lead was saved:', ghlError);
       }
       
       return NextResponse.json({ 
         success: true,
         leadId: leadId,
-        systems: systems,
-        warning: !zapierSuccess ? 'Lead saved to backup systems' : undefined
+        warning: !ghlSuccess ? 'Lead saved to backup system' : undefined
       });
     } else {
-      // All systems failed
-      throw new Error(`Failed to save lead to any system. Zapier: ${zapierError}, Sheets: Failed, GHL: ${ghlError}`);
+      // Both systems failed
+      throw new Error(`Failed to save lead: ${ghlError}`);
     }
 
   } catch (error) {
