@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, ChevronLeft, Home, Phone, User, Mail, Clock, CheckCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home, Phone, User, Mail, Clock, CheckCircle, DollarSign } from 'lucide-react';
 import { formatPhoneNumber, isValidPhoneNumber } from '../utils/phoneFormatter';
 import dynamic from 'next/dynamic';
 
@@ -36,6 +36,7 @@ interface FormData {
   email: string;
   propertyCondition: string;
   timeline: string;
+  askingPrice: string;
 }
 
 const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
@@ -78,7 +79,8 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
       fullName: '',
       email: '',
       propertyCondition: '',
-      timeline: ''
+      timeline: '',
+      askingPrice: ''
     };
   });
 
@@ -117,7 +119,8 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
         fullName: '',
         email: '',
         propertyCondition: '',
-        timeline: ''
+        timeline: '',
+        askingPrice: ''
       });
       setCurrentStep(1);
       setErrors({});
@@ -418,6 +421,25 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
               {errors.timeline && (
                 <p id="timeline-error" className="text-xs text-red-500 mt-1" role="alert">{errors.timeline}</p>
               )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <DollarSign className="inline w-4 h-4 mr-1" />
+                What is the cash price you're asking for your property?
+              </label>
+              <input
+                type="text"
+                name="askingPrice"
+                id="askingPrice"
+                value={formData.askingPrice}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, askingPrice: e.target.value }));
+                }}
+                placeholder="e.g., $250,000"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-gray-900"
+                aria-label="Asking price"
+              />
+              <p className="text-xs text-gray-500 mt-1">Optional - helps us prepare a more accurate offer</p>
             </div>
           </div>
         );
