@@ -174,9 +174,72 @@ function OfferPageContent() {
 
 
       {/* Hero Section */}
-      <section id="hero" className="bg-gradient-to-br from-primary to-accent text-white py-12 sm:py-16 px-4" role="banner" aria-label="Hero section">
+      <section id="hero" className="bg-gradient-to-br from-primary to-accent text-white py-6 sm:py-12 lg:py-16 px-4" role="banner" aria-label="Hero section">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Mobile Layout - Form First */}
+          <div className="lg:hidden">
+            {/* Compact header for mobile */}
+            <div className="mb-4 text-center">
+              <Image
+                src="/OTW TP.png"
+                alt="OTW Property Buyers"
+                width={150}
+                height={40}
+                className="object-contain mx-auto mb-3"
+                priority
+              />
+              <h1 className="text-2xl font-bold mb-2 leading-tight">
+                Sell Your House for Cash {hasLocation ? `in ${city}` : 'Fast'}
+              </h1>
+              <p className="text-sm text-white/90">
+                Get a fair cash offer in 24 hours
+              </p>
+            </div>
+
+            {/* Form - Priority on mobile */}
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto mb-6">
+              <div className="p-4 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-text mb-1">Get Your Cash Offer</h2>
+                <p className="text-sm text-gray-600">Takes less than 2 minutes</p>
+              </div>
+              <div className="p-4">
+                <MultiStepPropertyForm />
+              </div>
+            </div>
+
+            {/* Additional info below form on mobile */}
+            <div className="text-center">
+              <div className="flex items-center justify-center bg-white/10 backdrop-blur rounded-lg px-3 py-2 mb-4">
+                <Shield className="w-4 h-4 mr-2 text-highlight" />
+                <span className="text-xs">{hasLocation ? `Local ${city} Company` : 'Nationwide Cash Buyer'}</span>
+              </div>
+              
+              {/* Mobile CTA Buttons */}
+              <div className="flex gap-3">
+                <a 
+                  href={`tel:${phoneNumber.replace(/[^\d]/g, '')}`}
+                  onClick={handlePhoneClick}
+                  className="flex-1 bg-secondary text-white py-2.5 px-3 rounded-lg font-semibold text-sm hover:bg-opacity-90 transition-colors flex items-center justify-center"
+                  aria-label="Call OTW Property Buyers"
+                >
+                  <Phone className="w-4 h-4 mr-1.5" />
+                  Call Now
+                </a>
+                <a 
+                  href={`sms:${phoneNumber.replace(/[^\d]/g, '')}`}
+                  onClick={handleSmsClick}
+                  className="flex-1 bg-accent text-white py-2.5 px-3 rounded-lg font-semibold text-sm hover:bg-opacity-90 transition-colors flex items-center justify-center"
+                  aria-label="Text OTW Property Buyers"
+                >
+                  <MessageSquare className="w-4 h-4 mr-1.5" />
+                  Text Us
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Layout - Original Grid */}
+          <div className="hidden lg:grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="mb-6 flex justify-center md:justify-start">
                 <Image
@@ -203,28 +266,6 @@ function OfferPageContent() {
                     <span className="text-sm">{hasLocation ? `Local ${city} Company` : 'Nationwide Cash Buyer'}</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Mobile CTA Buttons */}
-              <div className="lg:hidden flex gap-4 mb-8">
-                <a 
-                  href={`tel:${phoneNumber.replace(/[^\d]/g, '')}`}
-                  onClick={handlePhoneClick}
-                  className="flex-1 bg-secondary text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 transition-colors flex items-center justify-center"
-                  aria-label="Call OTW Property Buyers"
-                >
-                  <Phone className="w-5 h-5 mr-2" />
-                  Call Now
-                </a>
-                <a 
-                  href={`sms:${phoneNumber.replace(/[^\d]/g, '')}`}
-                  onClick={handleSmsClick}
-                  className="flex-1 bg-accent text-white py-3 px-4 rounded-lg font-semibold hover:bg-opacity-90 transition-colors flex items-center justify-center"
-                  aria-label="Text OTW Property Buyers"
-                >
-                  <MessageSquare className="w-5 h-5 mr-2" />
-                  Text Us
-                </a>
               </div>
             </div>
 
