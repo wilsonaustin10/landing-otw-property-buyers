@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pagespeed": "node scripts/pagespeed-insights.js",
+    "pagespeed:production": "node scripts/pagespeed-insights.js https://www.otwhomebuyers.com",
+    "pagespeed:preview": "node scripts/pagespeed-insights.js https://landing-otw-property-buyers-plz23hjac.vercel.app",
+    "pagespeed:local": "node scripts/pagespeed-local.js",
+    "pagespeed:browser": "node scripts/pagespeed-local.js"
   },
   "dependencies": {
     "@googlemaps/extended-component-library": "^0.6.13",
