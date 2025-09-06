@@ -1,0 +1,114 @@
+/* Critical CSS for above-the-fold content */
+/* This should be inlined in the head for optimal performance */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
+  tab-size: 4;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: inherit;
+  line-height: inherit;
+}
+
+/* Critical layout styles */
+.max-w-7xl {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Critical text styles */
+.text-2xl { font-size: 1.5rem; line-height: 2rem; }
+.text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+.text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+.font-bold { font-weight: 700; }
+.text-white { color: #fff; }
+
+/* Critical spacing */
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+
+/* Critical background */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Critical form styles */
+input, select, textarea {
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.rounded-lg { border-radius: 0.5rem; }
+.rounded-xl { border-radius: 0.75rem; }
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Critical button styles */
+button {
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+  text-transform: none;
+  -webkit-appearance: button;
+  background-color: transparent;
+  background-image: none;
+  cursor: pointer;
+}
+
+/* Mobile-first responsive utilities */
+@media (min-width: 640px) {
+  .sm\\:py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+  .sm\\:text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+}
+
+@media (min-width: 1024px) {
+  .lg\\:py-16 { padding-top: 4rem; padding-bottom: 4rem; }
+  .lg\\:grid { display: grid; }
+  .lg\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lg\\:hidden { display: none; }
+  .lg\\:text-6xl { font-size: 3.75rem; line-height: 1; }
+}
+
+/* Hide elements until JS loads */
+.no-js .requires-js { display: none; }
+
+/* Prevent layout shift */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Font loading optimization */
+.font-loading body {
+  opacity: 0;
+}
+
+.fonts-loaded body {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}

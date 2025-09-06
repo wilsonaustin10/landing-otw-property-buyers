@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useSearchParams } from 'next/navigation';
-import MultiStepPropertyForm from '../../components/MultiStepPropertyForm';
+import dynamic from 'next/dynamic';
 import { 
   Home, DollarSign, Clock, Wrench, Phone, MessageSquare, 
   CheckCircle, Star, MapPin, Shield, Award, TrendingUp,
@@ -10,6 +10,19 @@ import {
 } from 'lucide-react';
 import Script from 'next/script';
 import Image from 'next/image';
+
+// Lazy load form component
+const MultiStepPropertyForm = dynamic(
+  () => import('../../components/MultiStepPropertyForm'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+);
 
 const companyName = 'OTW Property Buyers';
 const phoneNumber = '(505) 560-3532';
@@ -146,7 +159,10 @@ function OfferPageContent() {
 
   return (
     <>
-      <Script id="structured-data" type="application/ld+json">
+      <Script 
+        id="structured-data" 
+        type="application/ld+json"
+        strategy="lazyOnload">
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "LocalBusiness",
@@ -187,6 +203,8 @@ function OfferPageContent() {
                 height={40}
                 className="object-contain mx-auto mb-3"
                 priority
+                quality={85}
+                sizes="150px"
               />
               <h1 className="text-2xl font-bold mb-2 leading-tight">
                 Sell Your House for Cash {hasLocation ? `in ${city}` : 'Fast'}
@@ -249,6 +267,8 @@ function OfferPageContent() {
                   height={53}
                   className="object-contain"
                   priority
+                  quality={85}
+                  sizes="200px"
                 />
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
@@ -363,6 +383,9 @@ function OfferPageContent() {
                   width={120} 
                   height={100} 
                   className="object-contain"
+                  loading="lazy"
+                  quality={75}
+                  sizes="120px"
                 />
               </div>
               <div className="flex items-center">
@@ -372,6 +395,9 @@ function OfferPageContent() {
                   width={120} 
                   height={100} 
                   className="object-contain"
+                  loading="lazy"
+                  quality={75}
+                  sizes="120px"
                 />
               </div>
             </div>
