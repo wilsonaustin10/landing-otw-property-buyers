@@ -135,6 +135,22 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    
+    // Validate that we have a complete address (not just a street number)
+    // A complete address should have city and state from autocomplete
+    if (!data.city || !data.state) {
+      console.error('[submit-lead] Incomplete address - missing city or state');
+      console.log('[submit-lead] Address validation failed:', {
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        placeId: data.placeId
+      });
+      return NextResponse.json(
+        { error: 'Please select a complete address from the dropdown suggestions' },
+        { status: 400 }
+      );
+    }
 
     // Format phone number
     const phoneDigits = data.phone.replace(/\D/g, '');

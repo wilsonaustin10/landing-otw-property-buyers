@@ -81,70 +81,67 @@ export default function AddressAutocomplete({
 
       console.log('AddressAutocomplete: Autocomplete instance created successfully');
 
-      // Handle place selection
+      // Handle place selection - CRITICAL: Only update when we have a complete address
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current.getPlace();
         console.log('AddressAutocomplete: Place selected', place);
         
-        // Check if we have a valid place with a formatted address
-        // If not, keep the user's typed value
+        // ONLY update the form if we have a valid formatted_address from Google
+        // This is the complete address the user selected from the dropdown
         if (place?.formatted_address) {
           console.log('AddressAutocomplete: Using formatted address:', place.formatted_address);
+          
+          // Update the input field with the complete formatted address
           onChange(place.formatted_address);
           
-          // Parse address components if callback provided
-          if (onAddressSelect && place.address_components) {
+          // Also parse and send address components if callback provided
+          if (onAddressSelect) {
             const addressData: AddressData = {
               address: place.formatted_address,
               formattedAddress: place.formatted_address,
               placeId: place.place_id
             };
             
-            // Parse components
-            let streetNumber = '';
-            let route = '';
-            
-            place.address_components.forEach((component: any) => {
-              const types = component.types;
+            // Parse components if available
+            if (place.address_components) {
+              let streetNumber = '';
+              let route = '';
               
-              if (types.includes('street_number')) {
-                streetNumber = component.long_name;
-              } else if (types.includes('route')) {
-                route = component.long_name;
-              } else if (types.includes('locality')) {
-                addressData.city = component.long_name;
-              } else if (types.includes('sublocality') && !addressData.city) {
-                addressData.city = component.long_name;
-              } else if (types.includes('administrative_area_level_1')) {
-                addressData.state = component.short_name;
-              } else if (types.includes('postal_code')) {
-                addressData.postalCode = component.long_name;
-              }
-            });
-            
-            // Combine street number and route for full street address
-            addressData.addressLine1 = [streetNumber, route].filter(Boolean).join(' ').trim();
+              place.address_components.forEach((component: any) => {
+                const types = component.types;
+                
+                if (types.includes('street_number')) {
+                  streetNumber = component.long_name;
+                } else if (types.includes('route')) {
+                  route = component.long_name;
+                } else if (types.includes('locality')) {
+                  addressData.city = component.long_name;
+                } else if (types.includes('sublocality') && !addressData.city) {
+                  addressData.city = component.long_name;
+                } else if (types.includes('administrative_area_level_1')) {
+                  addressData.state = component.short_name;
+                } else if (types.includes('postal_code')) {
+                  addressData.postalCode = component.long_name;
+                }
+              });
+              
+              // Combine street number and route for full street address
+              addressData.addressLine1 = [streetNumber, route].filter(Boolean).join(' ').trim();
+            }
             
             console.log('Parsed address data:', addressData);
             if (onAddressSelectRef.current) {
               onAddressSelectRef.current(addressData);
             }
           }
-        } else if (place?.name) {
-          // This might be the issue - when user just types a number
-          // Google might return just the street number as place.name
-          console.log('AddressAutocomplete: Only place.name available:', place.name);
-          console.log('AddressAutocomplete: Current input value:', inputRef.current?.value);
-          // Don't update with just place.name if it's incomplete
-          // Keep what the user typed instead
-          if (inputRef.current?.value && inputRef.current.value.length > place.name.length) {
-            console.log('AddressAutocomplete: Keeping user input instead of place.name');
-            // Don't call onChange, keep the current value
-          } else {
-            onChange(place.name);
-          }
         } else {
-          console.log('AddressAutocomplete: No valid place data, keeping user input');
+          // If we don't have a formatted_address, the user didn't select from dropdown
+          // Log this for debugging but DON'T update the form with partial data
+          console.log('AddressAutocomplete: No formatted_address available');
+          console.log('AddressAutocomplete: Place object:', place);
+          
+          // Important: We do NOT update the form here
+          // The user's typed value will remain in the input field
         }
       });
     } catch (error) {
@@ -202,6 +199,20 @@ export default function AddressAutocomplete({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
+    
+    // When user types manually, clear the selection data
+    // This ensures they must select from dropdown for valid submission
+    if (onAddressSelect) {
+      onAddressSelectRef.current?.({
+        address: e.target.value,
+        formattedAddress: '',
+        addressLine1: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        placeId: '' // Clear placeId when typing manually
+      });
+    }
   };
 
   // Prevent form submission on Enter key when selecting from dropdown
@@ -245,7 +256,7 @@ export default function AddressAutocomplete({
         </p>
       ) : (
         <p id="address-hint" className="text-xs text-gray-500 mt-1">
-          We buy houses anywhere in the area
+          Start typing and select your address from the dropdown
         </p>
       )}
     </div>

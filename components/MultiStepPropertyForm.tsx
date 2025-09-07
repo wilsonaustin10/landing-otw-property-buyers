@@ -135,6 +135,9 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
       case 1:
         if (formData.address.trim() === '') {
           newErrors.address = 'Address is required';
+        } else if (!formData.placeId || !formData.city || !formData.state) {
+          // If no placeId, city, or state, the user didn't select from autocomplete
+          newErrors.address = 'Please select an address from the dropdown suggestions';
         }
         break;
       case 2:
