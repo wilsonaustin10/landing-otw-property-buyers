@@ -135,9 +135,10 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
       case 1:
         if (formData.address.trim() === '') {
           newErrors.address = 'Address is required';
-        } else if (!formData.placeId || !formData.city || !formData.state) {
-          // If no placeId, city, or state, the user didn't select from autocomplete
-          newErrors.address = 'Please select an address from the dropdown suggestions';
+        } else if (!formData.placeId && formData.address.length < 20) {
+          // If no placeId AND the address is too short, likely just typed a number
+          // A full address should be at least 20 characters (e.g., "123 Main St, City, ST")
+          newErrors.address = 'Please select a complete address from the dropdown suggestions';
         }
         break;
       case 2:
@@ -269,6 +270,7 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
               }}
               onAddressSelect={(addressData) => {
                 // Update all address fields when a place is selected from autocomplete
+                console.log('MultiStepPropertyForm: Address selected from autocomplete:', addressData);
                 setFormData(prev => ({
                   ...prev,
                   address: addressData.formattedAddress || addressData.address,

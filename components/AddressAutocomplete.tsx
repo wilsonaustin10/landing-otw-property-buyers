@@ -44,6 +44,7 @@ export default function AddressAutocomplete({
   const autocompleteRef = useRef<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const onAddressSelectRef = useRef(onAddressSelect);
+  const [hasSelectedFromDropdown, setHasSelectedFromDropdown] = useState(false);
   
   // Update ref when callback changes
   useEffect(() => {
@@ -90,6 +91,9 @@ export default function AddressAutocomplete({
         // This is the complete address the user selected from the dropdown
         if (place?.formatted_address) {
           console.log('AddressAutocomplete: Using formatted address:', place.formatted_address);
+          
+          // Mark that we've selected from dropdown
+          setHasSelectedFromDropdown(true);
           
           // Update the input field with the complete formatted address
           onChange(place.formatted_address);
@@ -198,6 +202,14 @@ export default function AddressAutocomplete({
   }, [isLoaded, initializeAutocomplete]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // If this change is from selecting an address, don't clear the data
+    if (hasSelectedFromDropdown) {
+      setHasSelectedFromDropdown(false);
+      onChange(e.target.value);
+      return;
+    }
+    
+    // User is typing manually
     onChange(e.target.value);
     
     // When user types manually, clear the selection data

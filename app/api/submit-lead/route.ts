@@ -137,11 +137,12 @@ export async function POST(request: Request) {
     }
     
     // Validate that we have a complete address (not just a street number)
-    // A complete address should have city and state from autocomplete
-    if (!data.city || !data.state) {
-      console.error('[submit-lead] Incomplete address - missing city or state');
+    // Check if address looks complete (has commas suggesting city/state)
+    if ((!data.city || !data.state) && data.address.length < 20) {
+      console.error('[submit-lead] Incomplete address - too short and missing city/state');
       console.log('[submit-lead] Address validation failed:', {
         address: data.address,
+        addressLength: data.address.length,
         city: data.city,
         state: data.state,
         placeId: data.placeId
