@@ -4,33 +4,15 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ChevronLeft, Home, Phone, User, Mail, Clock, CheckCircle, DollarSign } from 'lucide-react';
 import { formatPhoneNumber, isValidPhoneNumber } from '../utils/phoneFormatter';
-import dynamic from 'next/dynamic';
-
-// Dynamically import AddressAutocomplete to avoid SSR issues with Google Maps
-const AddressAutocomplete = dynamic(
-  () => import('./AddressAutocomplete'),
-  { 
-    ssr: false,
-    loading: () => (
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          <Home className="inline w-4 h-4 mr-1" />
-          What's the property address?
-        </label>
-        <input
-          type="text"
-          placeholder="Enter your property address"
-          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-gray-900"
-          disabled
-        />
-        <p className="text-xs text-gray-500 mt-1">Loading address autocomplete...</p>
-      </div>
-    )
-  }
-);
+import AddressAutocompleteWrapper from './AddressAutocompleteWrapper';
 
 interface FormData {
   address: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  placeId?: string;
   phone: string;
   fullName: string;
   email: string;
@@ -75,6 +57,11 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
     }
     return {
       address: '',
+      addressLine1: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      placeId: '',
       phone: '',
       fullName: '',
       email: '',
@@ -115,6 +102,11 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
       localStorage.removeItem('formProgress');
       setFormData({
         address: '',
+        addressLine1: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        placeId: '',
         phone: '',
         fullName: '',
         email: '',
@@ -255,7 +247,7 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
       case 1:
         return (
           <div className="space-y-4">
-            <AddressAutocomplete
+            <AddressAutocompleteWrapper
               value={formData.address}
               onChange={(value) => {
                 setFormData(prev => ({ ...prev, address: value }));

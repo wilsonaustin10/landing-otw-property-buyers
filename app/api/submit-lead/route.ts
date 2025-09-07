@@ -5,14 +5,22 @@ import { rateLimit } from '@/utils/rateLimit';
 import { goHighLevel } from '@/utils/goHighLevelV2';
 import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
 import { googleSheetsClient, initializeGoogleSheets } from '@/utils/googleSheets';
+import { validateAndTransformLead, parsePrice } from '@/lib/validation/leadSchema';
+import { z, ZodError } from 'zod';
 
 interface OfferLeadData {
   address: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  placeId?: string;
   phone: string;
   fullName: string;
   email: string;
   propertyCondition: string;
   timeline: string;
+  askingPrice?: string;
   source?: string;
   timestamp?: string;
 }
@@ -74,14 +82,35 @@ export async function POST(request: Request) {
     
     // Parse request data
     let data: OfferLeadData;
+    let validatedData: any;
     try {
       data = await request.json();
       console.log('[submit-lead] Parsed data:', { 
         hasAddress: !!data.address,
+        hasAddressLine1: !!data.addressLine1,
+        hasCity: !!data.city,
+        hasState: !!data.state,
         hasPhone: !!data.phone,
         hasEmail: !!data.email,
-        fullName: data.fullName
+        fullName: data.fullName,
+        askingPrice: data.askingPrice
       });
+      
+      // Validate and transform data with Zod
+      try {
+        validatedData = validateAndTransformLead(data, true);
+        console.log('[submit-lead] Validated data with parsed price:', validatedData.price);
+      } catch (zodError: any) {
+        if (zodError?.errors && Array.isArray(zodError.errors)) {
+          const errors = zodError.errors.map((e: any) => `${e.path?.join('.') || ''}: ${e.message}`).join(', ');
+          console.error('[submit-lead] Validation failed:', errors);
+          return NextResponse.json(
+            { error: 'Validation failed', details: errors },
+            { status: 400 }
+          );
+        }
+        throw zodError;
+      }
     } catch (parseError) {
       console.error('[submit-lead] Error parsing JSON:', parseError);
       return NextResponse.json(
@@ -90,11 +119,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate data
-    if (!validateLeadData(data)) {
-      console.error('[submit-lead] Validation failed');
+    // Additional validation for critical fields
+    if (!data.address || !data.phone || !data.email || !data.fullName) {
+      console.error('[submit-lead] Missing critical fields');
       return NextResponse.json(
-        { error: 'Missing required fields or invalid data format' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
@@ -129,8 +158,14 @@ export async function POST(request: Request) {
       email: data.email.toLowerCase(),
       phone: formattedPhone,
       address: data.address,
+      streetAddress: validatedData.addressLine1 || data.addressLine1 || '',
+      city: validatedData.city || data.city || '',
+      state: validatedData.state || data.state || '',
+      postalCode: validatedData.postalCode || data.postalCode || '',
+      placeId: data.placeId,
       propertyCondition: data.propertyCondition,
       timeframe: data.timeline,
+      price: validatedData.price?.toString() || data.askingPrice || '',
       timestamp,
       lastUpdated: timestamp,
       submissionType: 'complete',
@@ -142,6 +177,10 @@ export async function POST(request: Request) {
       leadId,
       firstName,
       lastName,
+      streetAddress: leadFormData.streetAddress,
+      city: leadFormData.city,
+      state: leadFormData.state,
+      price: leadFormData.price,
       source: leadFormData.referralSource
     });
 

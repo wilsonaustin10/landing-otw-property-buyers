@@ -5,6 +5,8 @@ import { rateLimit } from '@/utils/rateLimit';
 import { goHighLevel } from '@/utils/goHighLevelV2';
 import { verifyPhoneNumberWithCache } from '@/utils/phoneVerification';
 import { googleSheetsClient, initializeGoogleSheets } from '@/utils/googleSheets';
+import { validateAndTransformLead } from '@/lib/validation/leadSchema';
+import { z, ZodError } from 'zod';
 
 // Validate partial form data (only address and phone)
 function validatePartialData(data: Partial<LeadFormData>): boolean {
@@ -48,13 +50,32 @@ export async function POST(request: Request) {
 
     // Parse and validate request data
     let data;
+    let validatedData: any;
     try {
       data = await request.json();
       console.log('Received form data:', {
         hasAddress: !!data.address,
+        hasAddressLine1: !!data.addressLine1,
+        hasCity: !!data.city,
+        hasState: !!data.state,
         hasPhone: !!data.phone,
         phone: data.phone
       });
+      
+      // Validate with Zod schema
+      try {
+        validatedData = validateAndTransformLead(data, false); // false for partial
+      } catch (zodError: any) {
+        if (zodError?.errors && Array.isArray(zodError.errors)) {
+          const errors = zodError.errors.map((e: any) => `${e.path?.join('.') || ''}: ${e.message}`).join(', ');
+          console.error('Validation failed:', errors);
+          return NextResponse.json(
+            { error: 'Validation failed', details: errors },
+            { status: 400 }
+          );
+        }
+        throw zodError;
+      }
     } catch (parseError) {
       console.error('Error parsing request body:', parseError);
       return NextResponse.json(
@@ -89,6 +110,11 @@ export async function POST(request: Request) {
     // Prepare data with timestamp and tracking
     const leadData: Partial<LeadFormData> = {
       ...data,
+      streetAddress: validatedData.addressLine1 || data.addressLine1 || '',
+      city: validatedData.city || data.city || '',
+      state: validatedData.state || data.state || '',
+      postalCode: validatedData.postalCode || data.postalCode || '',
+      placeId: data.placeId,
       timestamp,
       lastUpdated: timestamp,
       leadId,
@@ -97,6 +123,9 @@ export async function POST(request: Request) {
 
     console.log('Prepared lead data:', {
       leadId,
+      streetAddress: leadData.streetAddress,
+      city: leadData.city,
+      state: leadData.state,
       timestamp,
       submissionType: 'partial'
     });

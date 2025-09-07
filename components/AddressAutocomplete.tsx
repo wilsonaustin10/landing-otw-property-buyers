@@ -3,9 +3,20 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Home } from 'lucide-react';
 
+interface AddressData {
+  address: string;
+  formattedAddress?: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  placeId?: string;
+}
+
 interface AddressAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
+  onAddressSelect?: (addressData: AddressData) => void;
   placeholder?: string;
   className?: string;
   autoFocus?: boolean;
@@ -22,6 +33,7 @@ declare global {
 export default function AddressAutocomplete({
   value,
   onChange,
+  onAddressSelect,
   placeholder = "Enter your property address",
   className = "",
   autoFocus = false,
@@ -31,6 +43,12 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const onAddressSelectRef = useRef(onAddressSelect);
+  
+  // Update ref when callback changes
+  useEffect(() => {
+    onAddressSelectRef.current = onAddressSelect;
+  }, [onAddressSelect]);
 
   const initializeAutocomplete = useCallback(() => {
     if (!inputRef.current) {
@@ -70,6 +88,45 @@ export default function AddressAutocomplete({
         
         if (place?.formatted_address) {
           onChange(place.formatted_address);
+          
+          // Parse address components if callback provided
+          if (onAddressSelect && place.address_components) {
+            const addressData: AddressData = {
+              address: place.formatted_address,
+              formattedAddress: place.formatted_address,
+              placeId: place.place_id
+            };
+            
+            // Parse components
+            let streetNumber = '';
+            let route = '';
+            
+            place.address_components.forEach((component: any) => {
+              const types = component.types;
+              
+              if (types.includes('street_number')) {
+                streetNumber = component.long_name;
+              } else if (types.includes('route')) {
+                route = component.long_name;
+              } else if (types.includes('locality')) {
+                addressData.city = component.long_name;
+              } else if (types.includes('sublocality') && !addressData.city) {
+                addressData.city = component.long_name;
+              } else if (types.includes('administrative_area_level_1')) {
+                addressData.state = component.short_name;
+              } else if (types.includes('postal_code')) {
+                addressData.postalCode = component.long_name;
+              }
+            });
+            
+            // Combine street number and route for full street address
+            addressData.addressLine1 = [streetNumber, route].filter(Boolean).join(' ').trim();
+            
+            console.log('Parsed address data:', addressData);
+            if (onAddressSelectRef.current) {
+              onAddressSelectRef.current(addressData);
+            }
+          }
         } else if (place?.name) {
           onChange(place.name);
         }
