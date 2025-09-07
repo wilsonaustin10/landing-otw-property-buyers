@@ -86,7 +86,10 @@ export default function AddressAutocomplete({
         const place = autocompleteRef.current.getPlace();
         console.log('AddressAutocomplete: Place selected', place);
         
+        // Check if we have a valid place with a formatted address
+        // If not, keep the user's typed value
         if (place?.formatted_address) {
+          console.log('AddressAutocomplete: Using formatted address:', place.formatted_address);
           onChange(place.formatted_address);
           
           // Parse address components if callback provided
@@ -128,7 +131,20 @@ export default function AddressAutocomplete({
             }
           }
         } else if (place?.name) {
-          onChange(place.name);
+          // This might be the issue - when user just types a number
+          // Google might return just the street number as place.name
+          console.log('AddressAutocomplete: Only place.name available:', place.name);
+          console.log('AddressAutocomplete: Current input value:', inputRef.current?.value);
+          // Don't update with just place.name if it's incomplete
+          // Keep what the user typed instead
+          if (inputRef.current?.value && inputRef.current.value.length > place.name.length) {
+            console.log('AddressAutocomplete: Keeping user input instead of place.name');
+            // Don't call onChange, keep the current value
+          } else {
+            onChange(place.name);
+          }
+        } else {
+          console.log('AddressAutocomplete: No valid place data, keeping user input');
         }
       });
     } catch (error) {

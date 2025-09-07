@@ -172,6 +172,17 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
     if (!isStepValid()) return;
     
     setIsSubmitting(true);
+    
+    // Log what we're about to send
+    console.log('Form data being submitted:', {
+      address: formData.address,
+      addressLine1: formData.addressLine1,
+      city: formData.city,
+      state: formData.state,
+      postalCode: formData.postalCode,
+      hasPlaceId: !!formData.placeId
+    });
+    
     try {
       // Clear saved progress on successful submission
       const response = await fetch('/api/submit-lead', {

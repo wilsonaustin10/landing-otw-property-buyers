@@ -108,9 +108,13 @@ export async function POST(request: Request) {
     });
 
     // Prepare data with timestamp and tracking
+    // IMPORTANT: Always use the full address text from the input field
+    const fullAddress = data.address || '';
+    
     const leadData: Partial<LeadFormData> = {
       ...data,
-      streetAddress: data.address || '', // Use the complete address from autocomplete
+      address: fullAddress,
+      streetAddress: fullAddress, // Always use the complete text from the address field
       city: validatedData.city || data.city || '',
       state: validatedData.state || data.state || '',
       postalCode: validatedData.postalCode || data.postalCode || '',

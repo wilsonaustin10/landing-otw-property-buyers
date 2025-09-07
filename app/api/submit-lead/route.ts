@@ -85,6 +85,14 @@ export async function POST(request: Request) {
     let validatedData: any;
     try {
       data = await request.json();
+      console.log('[submit-lead] Raw address data received:', {
+        address: data.address,
+        addressLine1: data.addressLine1,
+        city: data.city,
+        state: data.state,
+        postalCode: data.postalCode,
+        placeId: data.placeId
+      });
       console.log('[submit-lead] Parsed data:', { 
         hasAddress: !!data.address,
         hasAddressLine1: !!data.addressLine1,
@@ -151,14 +159,17 @@ export async function POST(request: Request) {
     const lastName = nameParts.slice(1).join(' ') || nameParts[0] || ''; // Use first name as last if only one name
 
     // Prepare lead data for GHL and Google Sheets
+    // IMPORTANT: Always use the full address text from the input field
+    const fullAddress = data.address || ''; // This is what the user typed/selected
+    
     const leadFormData: LeadFormData = {
       leadId,
       firstName,
       lastName,
       email: data.email.toLowerCase(),
       phone: formattedPhone,
-      address: data.address,
-      streetAddress: data.address, // Use the complete address from autocomplete
+      address: fullAddress,
+      streetAddress: fullAddress, // Always use the complete text from the address field
       city: validatedData.city || data.city || '',
       state: validatedData.state || data.state || '',
       postalCode: validatedData.postalCode || data.postalCode || '',
@@ -177,12 +188,15 @@ export async function POST(request: Request) {
       leadId,
       firstName,
       lastName,
+      address: leadFormData.address,
       streetAddress: leadFormData.streetAddress,
       city: leadFormData.city,
       state: leadFormData.state,
       price: leadFormData.price,
       source: leadFormData.referralSource
     });
+    
+    console.log('[submit-lead] Full address being sent:', fullAddress);
 
     // Send to Google Sheets
     let googleSheetsSuccess = false;
