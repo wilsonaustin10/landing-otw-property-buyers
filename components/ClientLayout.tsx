@@ -15,7 +15,7 @@ export default function ClientLayout({
   return (
     <>
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`}
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap&loading=async`}
         strategy="afterInteractive"
         onLoad={() => {
           console.log('Google Maps script loaded successfully');
@@ -46,7 +46,7 @@ export default function ClientLayout({
       </Script>
       <Script
         src={`https://www.google.com/recaptcha/enterprise.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`}
-        strategy="beforeInteractive"
+        strategy="lazyOnload"
       />
       
       <FormProvider>

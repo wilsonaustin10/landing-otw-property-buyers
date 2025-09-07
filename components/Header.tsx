@@ -11,7 +11,7 @@ export default function Header() {
           <Link href="/" className="flex items-center w-full md:w-auto justify-center md:justify-start">
             <div className="relative w-[140px] xs:w-[160px] sm:w-[150px] md:w-[200px] lg:w-[250px] h-[37px] xs:h-[42px] sm:h-[40px] md:h-[53px] lg:h-[66px]">
               <Image
-                src="/OTW Banner.png"
+                src="/optimized/OTW Banner.png"
                 alt="OTW Property Buyers"
                 fill
                 sizes="(max-width: 640px) 140px, (max-width: 768px) 160px, (max-width: 1024px) 200px, 250px"

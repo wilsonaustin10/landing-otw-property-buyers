@@ -12,11 +12,13 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center">
               <Image
-                src="/OTW TP.png"
+                src="/optimized/OTW TP.png"
                 alt="OTW Property Buyers"
-                width={100}
-                height={100}
+                width={120}
+                height={120}
                 className="mr-2 w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[120px] md:h-[120px]"
+                loading="lazy"
+                sizes="(max-width: 640px) 80px, (max-width: 768px) 100px, 120px"
               />
             </div>
             <p className="text-footer-text/90">
