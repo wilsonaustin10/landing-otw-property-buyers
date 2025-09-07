@@ -253,6 +253,19 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
                 setFormData(prev => ({ ...prev, address: value }));
                 if (errors.address) setErrors(prev => ({ ...prev, address: '' }));
               }}
+              onAddressSelect={(addressData) => {
+                // Update all address fields when a place is selected from autocomplete
+                setFormData(prev => ({
+                  ...prev,
+                  address: addressData.formattedAddress || addressData.address,
+                  addressLine1: addressData.addressLine1 || '',
+                  city: addressData.city || '',
+                  state: addressData.state || '',
+                  postalCode: addressData.postalCode || '',
+                  placeId: addressData.placeId || ''
+                }));
+                if (errors.address) setErrors(prev => ({ ...prev, address: '' }));
+              }}
               placeholder="Enter your property address"
               className={`w-full px-4 py-3 border-2 ${errors.address ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-gray-900`}
               autoFocus
