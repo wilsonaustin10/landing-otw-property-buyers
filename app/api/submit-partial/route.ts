@@ -110,7 +110,7 @@ export async function POST(request: Request) {
     // Prepare data with timestamp and tracking
     const leadData: Partial<LeadFormData> = {
       ...data,
-      streetAddress: validatedData.addressLine1 || data.addressLine1 || '',
+      streetAddress: data.address || '', // Use the complete address from autocomplete
       city: validatedData.city || data.city || '',
       state: validatedData.state || data.state || '',
       postalCode: validatedData.postalCode || data.postalCode || '',

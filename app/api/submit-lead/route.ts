@@ -158,7 +158,7 @@ export async function POST(request: Request) {
       email: data.email.toLowerCase(),
       phone: formattedPhone,
       address: data.address,
-      streetAddress: validatedData.addressLine1 || data.addressLine1 || '',
+      streetAddress: data.address, // Use the complete address from autocomplete
       city: validatedData.city || data.city || '',
       state: validatedData.state || data.state || '',
       postalCode: validatedData.postalCode || data.postalCode || '',
