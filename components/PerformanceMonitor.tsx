@@ -98,11 +98,14 @@ export default function PerformanceMonitor() {
         };
 
         // Report core web vitals when available
-        if (lcp) {
-          reportWebVital({ name: 'LCP', value: lcp.startTime });
+        const fcpEntry = performance.getEntriesByType('paint').find(entry => entry.name === 'first-contentful-paint');
+        const lcpEntry = performance.getEntriesByType('largest-contentful-paint').pop() as any;
+        
+        if (lcpEntry) {
+          reportWebVital({ name: 'LCP', value: lcpEntry.startTime });
         }
-        if (fcp) {
-          reportWebVital({ name: 'FCP', value: fcp.startTime });
+        if (fcpEntry) {
+          reportWebVital({ name: 'FCP', value: fcpEntry.startTime });
         }
       }
     }
