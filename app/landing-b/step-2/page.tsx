@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useForm } from '../../../context/FormContext';
 import { trackEvent } from '../../../utils/analytics';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { useRecaptcha } from '../../../hooks/useRecaptcha';
 
 export default function LandingBStep2Page() {
   const router = useRouter();
   const { formState, updateFormData } = useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { executeRecaptcha } = useGoogleReCaptcha();
+  const { executeRecaptcha } = useRecaptcha();
 
   const propertyConditions = ['Excellent', 'Good', 'Fair', 'Poor', 'Needs significant repairs'];
   const sellingTimeframes = ['ASAP', 'Within 1 month', '1-2 Months', '3-6 Months', 'Flexible', 'Just curious'];

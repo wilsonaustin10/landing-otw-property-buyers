@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Home } from 'lucide-react';
+import { useGoogleMapsLazy } from '../hooks/useGoogleMapsLazy';
 
 interface AddressData {
   address: string;
@@ -22,6 +23,7 @@ interface AddressAutocompleteProps {
   autoFocus?: boolean;
   error?: string;
   onBlur?: () => void;
+  onFocus?: () => void;
 }
 
 declare global {
@@ -38,11 +40,13 @@ export default function AddressAutocomplete({
   className = "",
   autoFocus = false,
   error,
-  onBlur
+  onBlur,
+  onFocus
 }: AddressAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const { loadGoogleMaps, isLoaded } = useGoogleMapsLazy();
   const onAddressSelectRef = useRef(onAddressSelect);
   const [hasSelectedFromDropdown, setHasSelectedFromDropdown] = useState(false);
   
@@ -51,15 +55,19 @@ export default function AddressAutocomplete({
     onAddressSelectRef.current = onAddressSelect;
   }, [onAddressSelect]);
 
-  const initializeAutocomplete = useCallback(() => {
-    if (!inputRef.current) {
-      console.log('AddressAutocomplete: Input ref not ready');
+  const initializeAutocomplete = useCallback(async () => {
+    if (!inputRef.current || isInitialized) {
       return;
     }
     
     if (!window.google?.maps?.places) {
-      console.log('AddressAutocomplete: Google Maps Places API not loaded');
-      return;
+      console.log('AddressAutocomplete: Google Maps Places API not loaded, attempting to load...');
+      await loadGoogleMaps();
+      
+      if (!window.google?.maps?.places) {
+        console.error('AddressAutocomplete: Failed to load Google Maps');
+        return;
+      }
     }
 
     console.log('AddressAutocomplete: Initializing autocomplete');
@@ -76,11 +84,12 @@ export default function AddressAutocomplete({
         {
           types: ['address'],
           componentRestrictions: { country: 'us' },
-          fields: ['formatted_address', 'address_components', 'geometry']
+          fields: ['formatted_address', 'address_components', 'geometry', 'place_id']
         }
       );
 
       console.log('AddressAutocomplete: Autocomplete instance created successfully');
+      setIsInitialized(true);
 
       // Handle place selection - CRITICAL: Only update when we have a complete address
       autocompleteRef.current.addListener('place_changed', () => {
@@ -99,7 +108,7 @@ export default function AddressAutocomplete({
           onChange(place.formatted_address);
           
           // Also parse and send address components if callback provided
-          if (onAddressSelect) {
+          if (onAddressSelectRef.current) {
             const addressData: AddressData = {
               address: place.formatted_address,
               formattedAddress: place.formatted_address,
@@ -134,9 +143,7 @@ export default function AddressAutocomplete({
             }
             
             console.log('Parsed address data:', addressData);
-            if (onAddressSelectRef.current) {
-              onAddressSelectRef.current(addressData);
-            }
+            onAddressSelectRef.current(addressData);
           }
         } else {
           // If we don't have a formatted_address, the user didn't select from dropdown
@@ -151,55 +158,24 @@ export default function AddressAutocomplete({
     } catch (error) {
       console.error('AddressAutocomplete: Error creating autocomplete instance', error);
     }
-  }, [onChange]);
+  }, [onChange, isInitialized, loadGoogleMaps]);
 
-  useEffect(() => {
-    // Check if Google Maps is already loaded
-    if (window.google?.maps?.places) {
-      setIsLoaded(true);
-      initializeAutocomplete();
-      return;
+  // Load Google Maps on focus
+  const handleFocus = useCallback(async () => {
+    if (!isInitialized && !isLoaded) {
+      await initializeAutocomplete();
     }
+    onFocus?.();
+  }, [isInitialized, isLoaded, initializeAutocomplete, onFocus]);
 
-    // Listen for the custom event that indicates Google Maps is ready
-    const handleGoogleMapsReady = () => {
-      setIsLoaded(true);
-      initializeAutocomplete();
-    };
-
-    window.addEventListener('google-maps-ready', handleGoogleMapsReady);
-
-    // Also set up a polling check as a fallback
-    const checkGoogleMaps = setInterval(() => {
-      if (window.google?.maps?.places) {
-        clearInterval(checkGoogleMaps);
-        setIsLoaded(true);
-        initializeAutocomplete();
-      }
-    }, 100);
-
-    // Clean up interval after 10 seconds if Google Maps hasn't loaded
-    const timeout = setTimeout(() => {
-      clearInterval(checkGoogleMaps);
-      console.warn('Google Maps API failed to load after 10 seconds');
-    }, 10000);
-
+  // Clean up on unmount
+  useEffect(() => {
     return () => {
-      window.removeEventListener('google-maps-ready', handleGoogleMapsReady);
-      clearInterval(checkGoogleMaps);
-      clearTimeout(timeout);
       if (autocompleteRef.current && window.google?.maps?.event) {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
-  }, [initializeAutocomplete]);
-
-  // Reinitialize when Google Maps loads
-  useEffect(() => {
-    if (isLoaded) {
-      initializeAutocomplete();
-    }
-  }, [isLoaded, initializeAutocomplete]);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // If this change is from selecting an address, don't clear the data
@@ -214,8 +190,8 @@ export default function AddressAutocomplete({
     
     // When user types manually, clear the selection data
     // This ensures they must select from dropdown for valid submission
-    if (onAddressSelect) {
-      onAddressSelectRef.current?.({
+    if (onAddressSelectRef.current) {
+      onAddressSelectRef.current({
         address: e.target.value,
         formattedAddress: '',
         addressLine1: '',
@@ -252,6 +228,7 @@ export default function AddressAutocomplete({
         value={value}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
         onBlur={onBlur}
         placeholder={placeholder}
         className={className}

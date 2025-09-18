@@ -4,111 +4,109 @@ import { useEffect } from 'react';
 
 export default function PerformanceMonitor() {
   useEffect(() => {
-    // Only run in production
-    if (process.env.NODE_ENV !== 'production') return;
-    
-    // Web Vitals monitoring
-    const reportWebVitals = (metric: any) => {
-      // Send to analytics
-      if (window.gtag) {
-        window.gtag('event', metric.name, {
-          value: Math.round(metric.value),
-          metric_id: metric.id,
-          metric_value: metric.value,
-          metric_delta: metric.delta,
+    if (typeof window !== 'undefined' && 'performance' in window) {
+      // Log Core Web Vitals
+      const logWebVitals = () => {
+        const paintEntries = performance.getEntriesByType('paint');
+        const navigationEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+        
+        const fcp = paintEntries.find(entry => entry.name === 'first-contentful-paint');
+        const lcp = performance.getEntriesByType('largest-contentful-paint').pop() as any;
+        
+        if (navigationEntries.length > 0) {
+          const nav = navigationEntries[0];
+          console.group('🚀 Performance Metrics');
+          console.log('DNS Lookup:', nav.domainLookupEnd - nav.domainLookupStart, 'ms');
+          console.log('TCP Connection:', nav.connectEnd - nav.connectStart, 'ms');
+          console.log('Request Time:', nav.responseStart - nav.requestStart, 'ms');
+          console.log('Response Time:', nav.responseEnd - nav.responseStart, 'ms');
+          console.log('DOM Processing:', nav.domComplete - nav.domInteractive, 'ms');
+          console.log('Page Load Time:', nav.loadEventEnd - nav.fetchStart, 'ms');
+          console.groupEnd();
+        }
+
+        if (fcp) {
+          console.log('📊 First Contentful Paint (FCP):', fcp.startTime.toFixed(2), 'ms');
+        }
+
+        if (lcp) {
+          console.log('📊 Largest Contentful Paint (LCP):', lcp.startTime.toFixed(2), 'ms');
+        }
+
+        // Log total JS size loaded
+        const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+        const jsResources = resources.filter(r => r.name.includes('.js') || r.name.includes('recaptcha') || r.name.includes('maps') || r.name.includes('gtag'));
+        
+        const totalJSSize = jsResources.reduce((acc, r) => acc + (r.transferSize || 0), 0);
+        console.log('📦 Total JavaScript Loaded:', (totalJSSize / 1024).toFixed(2), 'KB');
+        
+        // Log individual script sizes
+        console.group('📜 Script Details');
+        jsResources.forEach(r => {
+          const name = r.name.split('/').pop() || r.name;
+          const size = r.transferSize || 0;
+          const loadTime = r.responseEnd - r.startTime;
+          console.log(`${name}: ${(size / 1024).toFixed(2)} KB, loaded in ${loadTime.toFixed(2)} ms`);
         });
+        console.groupEnd();
+      };
+
+      // Wait for page to fully load before logging
+      if (document.readyState === 'complete') {
+        setTimeout(logWebVitals, 1000);
+      } else {
+        window.addEventListener('load', () => setTimeout(logWebVitals, 1000));
       }
-      
-      // Log critical metrics
-      if (['FCP', 'LCP', 'CLS', 'FID', 'TTFB'].includes(metric.name)) {
-        console.log(`${metric.name}: ${metric.value}`);
-      }
-    };
-    
-    // Observe performance metrics
-    if ('PerformanceObserver' in window) {
+
+      // Observe Cumulative Layout Shift
       try {
-        // LCP
-        const lcpObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          const lastEntry = entries[entries.length - 1];
-          reportWebVitals({
-            name: 'LCP',
-            value: lastEntry.startTime,
-            id: 'v3-' + Date.now(),
-          });
-        });
-        lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
-        
-        // FID
-        const fidObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach((entry: any) => {
-            reportWebVitals({
-              name: 'FID',
-              value: entry.processingStart - entry.startTime,
-              id: 'v3-' + Date.now(),
-            });
-          });
-        });
-        fidObserver.observe({ type: 'first-input', buffered: true });
-        
-        // CLS
-        let clsValue = 0;
-        let clsEntries: any[] = [];
-        
         const clsObserver = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          entries.forEach((entry: any) => {
-            if (!entry.hadRecentInput) {
-              const firstSessionEntry = clsEntries[0];
-              const lastSessionEntry = clsEntries[clsEntries.length - 1];
-              
-              if (entry.startTime - lastSessionEntry.startTime < 1000 &&
-                  entry.startTime - firstSessionEntry.startTime < 5000) {
-                clsValue += entry.value;
-                clsEntries.push(entry);
-              } else {
-                clsValue = entry.value;
-                clsEntries = [entry];
-              }
+          let clsValue = 0;
+          for (const entry of list.getEntries()) {
+            if (!(entry as any).hadRecentInput) {
+              clsValue += (entry as any).value;
             }
-          });
-          
-          reportWebVitals({
-            name: 'CLS',
-            value: clsValue,
-            id: 'v3-' + Date.now(),
-          });
+          }
+          console.log('📊 Cumulative Layout Shift (CLS):', clsValue.toFixed(3));
         });
         clsObserver.observe({ type: 'layout-shift', buffered: true });
-        
       } catch (e) {
-        console.error('Error setting up performance monitoring:', e);
+        // CLS observer not supported
+      }
+
+      // Observe First Input Delay
+      try {
+        const fidObserver = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          if (entries.length > 0) {
+            const fid = entries[0] as any;
+            console.log('📊 First Input Delay (FID):', fid.processingStart - fid.startTime, 'ms');
+          }
+        });
+        fidObserver.observe({ type: 'first-input', buffered: true });
+      } catch (e) {
+        // FID observer not supported
+      }
+
+      // Send to analytics in production
+      if (process.env.NODE_ENV === 'production' && (window as any).gtag) {
+        const reportWebVital = (metric: { name: string; value: number }) => {
+          (window as any).gtag('event', metric.name, {
+            value: Math.round(metric.value),
+            metric_value: metric.value,
+          });
+        };
+
+        // Report core web vitals when available
+        if (lcp) {
+          reportWebVital({ name: 'LCP', value: lcp.startTime });
+        }
+        if (fcp) {
+          reportWebVital({ name: 'FCP', value: fcp.startTime });
+        }
       }
     }
-    
-    // Report load time
-    window.addEventListener('load', () => {
-      const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      if (navigationEntry) {
-        // TTFB
-        reportWebVitals({
-          name: 'TTFB',
-          value: navigationEntry.responseStart - navigationEntry.requestStart,
-          id: 'v3-' + Date.now(),
-        });
-        
-        // Page Load Time
-        reportWebVitals({
-          name: 'Load',
-          value: navigationEntry.loadEventEnd - navigationEntry.fetchStart,
-          id: 'v3-' + Date.now(),
-        });
-      }
-    });
-    
   }, []);
-  
+
   return null;
 }

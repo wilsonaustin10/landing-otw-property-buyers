@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
+import { lazyLoadRecaptcha } from '../utils/lazyLoadScripts';
 
 declare global {
   interface Window {
@@ -14,12 +15,33 @@ declare global {
 }
 
 export const useRecaptcha = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const loadRecaptcha = useCallback(async () => {
+    if (isLoaded || isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      await lazyLoadRecaptcha();
+      setIsLoaded(true);
+    } catch (error) {
+      console.error('Failed to load reCAPTCHA:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoaded, isLoading]);
+
   const executeRecaptcha = useCallback(async (action: string): Promise<string | null> => {
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
     
     if (!siteKey) {
       console.warn('reCAPTCHA site key not configured');
       return null;
+    }
+
+    if (!isLoaded) {
+      await loadRecaptcha();
     }
 
     if (typeof window === 'undefined' || !window.grecaptcha?.enterprise) {
@@ -38,7 +60,7 @@ export const useRecaptcha = () => {
         }
       });
     });
-  }, []);
+  }, [isLoaded, loadRecaptcha]);
 
-  return { executeRecaptcha };
+  return { executeRecaptcha, loadRecaptcha, isLoading, isLoaded };
 };
