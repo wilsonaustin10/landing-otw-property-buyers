@@ -132,8 +132,8 @@ export default function PrivacyPolicy() {
                   
                 </a>
                 <br />
-                <a href="tel:(505)560-3532" className="text-primary hover:underline">
-                  (505)560-3532
+                <a href="tel:(575)500-7490" className="text-primary hover:underline">
+                  (575)500-7490
                 </a>
               </p>
             </section>

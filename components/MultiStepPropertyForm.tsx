@@ -218,11 +218,11 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Form submission failed:', response.status, errorData);
-        alert(`There was an error submitting your form (Error ${response.status}). Please try again or call us directly at (505) 560-3532.`);
+        alert(`There was an error submitting your form (Error ${response.status}). Please try again or call us directly at (575)500-7490.`);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('There was an error submitting your form. Please try again or call us directly at (505) 560-3532.');
+      alert('There was an error submitting your form. Please try again or call us directly at (575)500-7490.');
     } finally {
       setIsSubmitting(false);
     }

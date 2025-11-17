@@ -4,7 +4,7 @@ import OfferClient from './OfferClient';
 
 export const metadata: Metadata = {
   title: 'Sell Your House Fast | Get Cash Offer in 24 Hours | OTW Property Buyers',
-  description: 'Get a fair cash offer for your house in 24 hours. We buy houses as-is, close in 7 days. No fees, no commissions. Call (505) 560-3532 for instant offer.',
+  description: 'Get a fair cash offer for your house in 24 hours. We buy houses as-is, close in 7 days. No fees, no commissions. Call (575)500-7490 for instant offer.',
   keywords: 'sell house fast, cash home buyers, we buy houses, sell my house, cash offer',
   openGraph: {
     title: 'Sell Your House Fast - Get Cash Offer Today',

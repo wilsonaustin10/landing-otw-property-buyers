@@ -24,7 +24,7 @@ const MultiStepPropertyForm = dynamic(
 );
 
 const companyName = 'OTW Property Buyers';
-const phoneNumber = '(505) 560-3532';
+const phoneNumber = '(575)500-7490';
 
 export default function OfferClient() {
   const searchParams = useSearchParams();
