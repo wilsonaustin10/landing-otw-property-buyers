@@ -544,7 +544,7 @@ const MultiStepPropertyForm = React.memo(function MultiStepPropertyForm() {
               </>
             ) : currentStep === totalSteps ? (
               <>
-                Get My Cash Offer
+                Get Offer
                 <CheckCircle className="w-5 h-5 ml-1" />
               </>
             ) : (

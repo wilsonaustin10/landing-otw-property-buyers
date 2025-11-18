@@ -127,7 +127,7 @@ export default function OfferClient() {
                 onClick={scrollToForm}
                 className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
               >
-                Get My Cash Offer <ArrowRight className="w-5 h-5" />
+                Get Offer <ArrowRight className="w-5 h-5" />
               </button>
               <a
                 href={`tel:${phoneNumber.replace(/[^\d]/g, '')}`}
@@ -143,7 +143,7 @@ export default function OfferClient() {
           <div id="property-form" className="max-w-2xl mx-auto">
             <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8">
               <h2 className="text-2xl font-bold text-center mb-6">
-                Get Your FREE Cash Offer Today!
+                Get Offer Today!
               </h2>
               <MultiStepPropertyForm />
             </div>
@@ -255,7 +255,7 @@ export default function OfferClient() {
               onClick={scrollToForm}
               className="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
-              Get My Cash Offer
+              Get Offer
             </button>
             <a
               href={`tel:${phoneNumber.replace(/[^\d]/g, '')}`}
@@ -276,7 +276,7 @@ export default function OfferClient() {
               onClick={scrollToForm}
               className="flex-1 bg-primary text-white py-3 font-semibold hover:bg-primary-dark transition-colors"
             >
-              Get Cash Offer
+              Get Offer
             </button>
             <a
               href={`tel:${phoneNumber.replace(/[^\d]/g, '')}`}

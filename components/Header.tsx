@@ -46,8 +46,7 @@ export default function Header() {
               href="/#property-form"
               className="inline-flex items-center px-3 xs:px-4 sm:px-2 md:px-3 py-1.5 xs:py-1.5 sm:py-1 md:py-1.5 border border-transparent text-xs xs:text-sm sm:text-xs md:text-sm font-semibold rounded-md shadow-sm text-white bg-secondary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors transform hover:scale-105 md:hover:scale-100"
             >
-              <span className="hidden xs:inline sm:inline">Get Your Offer</span>
-              <span className="xs:hidden">Get Offer</span>
+              <span>Get Offer</span>
             </Link>
           </div>
         </div>

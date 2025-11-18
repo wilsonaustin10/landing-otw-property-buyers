@@ -87,7 +87,7 @@ export default function Footer() {
               href="/"
               className="inline-block bg-secondary text-white px-6 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
             >
-              Get Your Offer
+              Get Offer
             </Link>
           </div>
         </div>
