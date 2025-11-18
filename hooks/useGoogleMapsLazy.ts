@@ -9,7 +9,7 @@ export const useGoogleMapsLazy = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.google?.maps) {
+    if (typeof window !== 'undefined' && window.google?.maps?.places) {
       setIsLoaded(true);
     }
   }, []);
@@ -35,27 +35,54 @@ export const useGoogleMapsLazy = () => {
   }, [isLoaded, isLoading]);
 
   const waitForGoogleMaps = useCallback(async (): Promise<boolean> => {
-    if (isLoaded) return true;
+    // Check if Places library is already available
+    if (isLoaded && window.google?.maps?.places) {
+      return true;
+    }
     
+    // Try to load if not already loaded
     const success = await loadGoogleMaps();
     if (!success) return false;
 
-    return new Promise((resolve) => {
-      if (window.google?.maps) {
-        resolve(true);
-      } else {
-        const checkInterval = setInterval(() => {
-          if (window.google?.maps) {
-            clearInterval(checkInterval);
-            resolve(true);
-          }
-        }, 100);
+    // Since lazyLoadGoogleMaps now waits for Places library, we can check immediately
+    // But add a fallback check just in case
+    if (window.google?.maps?.places) {
+      return true;
+    }
 
-        setTimeout(() => {
+    // Fallback: poll for Places library (shouldn't be needed if lazyLoadGoogleMaps works correctly)
+    return new Promise((resolve) => {
+      let isResolved = false;
+      let timeoutId: NodeJS.Timeout | null = null;
+      
+      const checkPlaces = () => {
+        if (isResolved) return;
+        
+        if (window.google?.maps?.places) {
+          isResolved = true;
+          if (timeoutId) clearTimeout(timeoutId);
+          setIsLoaded(true);
+          resolve(true);
+        }
+      };
+
+      // Check immediately first
+      checkPlaces();
+      
+      // If not ready, poll every 50ms
+      const checkInterval = setInterval(() => {
+        checkPlaces();
+      }, 50);
+
+      // Timeout after 10 seconds
+      timeoutId = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true;
           clearInterval(checkInterval);
+          console.error('Google Maps Places library not available after waiting');
           resolve(false);
-        }, 10000);
-      }
+        }
+      }, 10000);
     });
   }, [isLoaded, loadGoogleMaps]);
 

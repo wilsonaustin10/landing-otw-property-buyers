@@ -46,7 +46,7 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const { loadGoogleMaps, isLoaded } = useGoogleMapsLazy();
+  const { waitForGoogleMaps, isLoaded } = useGoogleMapsLazy();
   const onAddressSelectRef = useRef(onAddressSelect);
   const [hasSelectedFromDropdown, setHasSelectedFromDropdown] = useState(false);
   
@@ -60,14 +60,21 @@ export default function AddressAutocomplete({
       return;
     }
     
+    // Wait for Google Maps and Places library to be fully loaded
     if (!window.google?.maps?.places) {
-      console.log('AddressAutocomplete: Google Maps Places API not loaded, attempting to load...');
-      await loadGoogleMaps();
+      console.log('AddressAutocomplete: Google Maps Places API not loaded, waiting for it...');
+      const isReady = await waitForGoogleMaps();
       
-      if (!window.google?.maps?.places) {
-        console.error('AddressAutocomplete: Failed to load Google Maps');
+      if (!isReady || !window.google?.maps?.places) {
+        console.error('AddressAutocomplete: Failed to load Google Maps Places library');
         return;
       }
+    }
+
+    // Double-check Places library is available before initializing
+    if (!window.google?.maps?.places?.Autocomplete) {
+      console.error('AddressAutocomplete: Places Autocomplete class not available');
+      return;
     }
 
     console.log('AddressAutocomplete: Initializing autocomplete');
@@ -157,16 +164,17 @@ export default function AddressAutocomplete({
       });
     } catch (error) {
       console.error('AddressAutocomplete: Error creating autocomplete instance', error);
+      setIsInitialized(false); // Reset so we can try again
     }
-  }, [onChange, isInitialized, loadGoogleMaps]);
+  }, [onChange, isInitialized, waitForGoogleMaps]);
 
   // Load Google Maps on focus
   const handleFocus = useCallback(async () => {
-    if (!isInitialized && !isLoaded) {
+    if (!isInitialized) {
       await initializeAutocomplete();
     }
     onFocus?.();
-  }, [isInitialized, isLoaded, initializeAutocomplete, onFocus]);
+  }, [isInitialized, initializeAutocomplete, onFocus]);
 
   // Clean up on unmount
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { googlePlacesMonitor } from '../utils/googlePlacesMonitor';
+import { lazyLoadGoogleMaps } from '../utils/lazyLoadScripts';
 
 declare global {
   namespace google.maps.places {
@@ -54,20 +55,51 @@ export function useGooglePlaces(
     if (!enabled || isInitializedRef.current) return;
     let mounted = true;
     let retryCount = 0;
-    const maxRetries = 50; // 5 seconds with 100ms intervals
+    const maxRetries = 100; // 10 seconds with 100ms intervals
     
-    const initializeAutocomplete = () => {
+    const initializeAutocomplete = async () => {
       // Check if component is still mounted
       if (!mounted) return;
       
-      // Wait for both input ref and Google Maps to be available
-      if (!inputRef.current || !window.google?.maps?.places) {
+      // Wait for input ref to be available
+      if (!inputRef.current) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(initializeAutocomplete, 100);
+        } else {
+          console.error('Input ref not available after waiting');
+        }
+        return;
+      }
+
+      // Wait for Google Maps Places library to be available
+      if (!window.google?.maps?.places) {
         if (retryCount < maxRetries) {
           retryCount++;
           console.log(`Waiting for Google Places API... (attempt ${retryCount}/${maxRetries})`);
+          
+          // Try to load Google Maps if not already loading
+          try {
+            await lazyLoadGoogleMaps();
+          } catch (error) {
+            console.error('Failed to load Google Maps:', error);
+          }
+          
           setTimeout(initializeAutocomplete, 100);
         } else {
-          console.error('Google Places API failed to load after 5 seconds');
+          console.error('Google Places API failed to load after 10 seconds');
+        }
+        return;
+      }
+
+      // Verify Places Autocomplete class is available
+      if (!window.google.maps.places.Autocomplete) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Waiting for Places Autocomplete class... (attempt ${retryCount}/${maxRetries})`);
+          setTimeout(initializeAutocomplete, 100);
+        } else {
+          console.error('Places Autocomplete class not available after waiting');
         }
         return;
       }
@@ -200,6 +232,15 @@ export function useGooglePlaces(
         isInitializedRef.current = true;
       } catch (error) {
         console.error('Error initializing Places Autocomplete:', error);
+        // Reset initialization flag so we can try again
+        isInitializedRef.current = false;
+        
+        // If error is due to Places not being ready, retry
+        if (retryCount < maxRetries && error instanceof Error && 
+            (error.message.includes('Places') || error.message.includes('Autocomplete'))) {
+          retryCount++;
+          setTimeout(initializeAutocomplete, 200);
+        }
       }
     };
 
