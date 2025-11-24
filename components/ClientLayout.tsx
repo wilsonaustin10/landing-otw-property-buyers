@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import GoogleTagDebugger from '../components/GoogleTagDebugger';
 import GooglePlacesDebugger from '../components/GooglePlacesDebugger';
+import GoogleMapsScript from '../components/GoogleMapsScript';
 
 export default function ClientLayout({
   children,
@@ -13,6 +14,7 @@ export default function ClientLayout({
 }) {
   return (
     <>
+      <GoogleMapsScript />
       <FormProvider>
         <Header />
         <main className="flex-grow">

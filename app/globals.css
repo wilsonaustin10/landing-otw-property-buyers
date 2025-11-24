@@ -13,6 +13,15 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   margin-top: -1px;
   font-family: inherit;
+  /* Ensure dropdown is not clipped by parent containers */
+  overflow: visible !important;
+}
+
+/* Ensure form containers don't clip the autocomplete dropdown */
+#property-form,
+#property-form > div,
+form {
+  overflow: visible !important;
 }
 
 .pac-item {

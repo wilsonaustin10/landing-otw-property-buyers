@@ -201,27 +201,17 @@ export function useGooglePlaces(
           sessionTokenRef.current = new google.maps.places.AutocompleteSessionToken();
         });
 
-        // Add input listener to enforce minimum characters
+        // Monitor input for analytics (but let Google handle dropdown visibility)
         const handleInput = (e: Event) => {
           const target = e.target as HTMLInputElement;
           const value = target.value.trim();
           
+          // Log for monitoring but don't interfere with Google's native dropdown behavior
           if (value.length < minCharacters) {
-            // Disable autocomplete for short inputs
-            const pacContainer = document.querySelector('.pac-container') as HTMLElement;
-            if (pacContainer) {
-              pacContainer.style.display = 'none';
-            }
             googlePlacesMonitor.logApiCall('input_too_short', { 
               inputLength: value.length, 
               minRequired: minCharacters 
             });
-          } else {
-            // Re-enable if hidden
-            const pacContainer = document.querySelector('.pac-container') as HTMLElement;
-            if (pacContainer && pacContainer.style.display === 'none') {
-              pacContainer.style.display = '';
-            }
           }
         };
 
